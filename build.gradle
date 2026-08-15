@@ -1,0 +1,51 @@
+plugins {
+    id "java"
+    id "org.xtext.builder" version "3.0.2"
+}
+
+group 'org.contextmapper'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    xtextLanguages "org.contextmapper:context-mapper-dsl:${cmlVersion}"
+
+    implementation "org.eclipse.xtend:org.eclipse.xtend.lib:${xtendLibVersion}"
+    implementation "org.contextmapper:context-mapper-dsl:${cmlVersion}"
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+}
+
+/*
+ * Genera los diagramas de Context Map (PNG/SVG/DOT) en ./src-gen.
+ * Requiere Graphviz (dot) en el PATH (ya incluido en el Dev Container).
+ * Uso: ./gradlew generateContextMaps
+ */
+task generateContextMaps(type: JavaExec) {
+    group = 'context mapper'
+    description = 'Genera los diagramas de Context Map de Hogar de los Alpes en src-gen'
+    dependsOn 'classes'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.contextmapper.hda.GenerateContextMaps'
+    workingDir = projectDir
+}
+
+xtext {
+    languages {
+        cml {
+            fileExtension = 'cml'
+            setup = 'org.contextmapper.dsl.ContextMappingDSLStandaloneSetup'
+            generator.outlet.producesJava = true
+        }
+    }
+
+    sourceSets {
+        main {
+            srcDir 'src/main/cml'
+        }
+    }
+}

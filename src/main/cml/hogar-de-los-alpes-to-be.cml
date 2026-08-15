@@ -1,0 +1,261 @@
+/*
+ * Hogar de los Alpes - Context Map TO-BE.
+ *
+ * Objetivo: migrar el monolito hacia un sistema distribuido y orientado a
+ * eventos, con Bounded Contexts pequenos, coherentes y con ownership claro.
+ * El caso no exige tecnologias especificas, por lo que no se nombran brokers,
+ * nubes ni frameworks concretos.
+ *
+ * La expansion regional (Colombia, Mexico, Brasil, Argentina) se encapsula en
+ * RegionalOperations: cada pais difiere en moneda, zona horaria, regulacion,
+ * partners locales y estacionalidad, y esas diferencias no deben contaminar
+ * los demas contextos. Se prefiere un unico contexto de operaciones regionales
+ * sobre clonar la arquitectura cuatro veces.
+ */
+
+import "./hogar-de-los-alpes-domains.cml"
+
+ContextMap HogarDeLosAlpesToBeContextMap {
+    type = SYSTEM_LANDSCAPE
+    state = TO_BE
+
+    contains ProviderRegistry, ProviderAccreditation, MarketplaceIntake, ProviderMatching,
+             WorkOrchestration, Quotations, PartnerIntegration, PartnerRules,
+             QualityAndDisputes, Payments, RecurringServices, ProviderWallet,
+             CreditScoring, MicroLending, RegionalOperations,
+             B2B2CPartners, VerificationAuthorities, PaymentProviders
+
+    /* ============ Sistemas externos ============ */
+
+    /*
+     * Las autoridades de verificacion exponen formatos heterogeneos que no
+     * fueron disenados para HdA; ProviderAccreditation protege su modelo de
+     * acreditacion con una capa anticorrupcion.
+     */
+    VerificationAuthorities [U] -> [D,ACL] ProviderAccreditation
+
+    /*
+     * Cada aseguradora, banco o comercio tiene su propio modelo; no existe un
+     * lenguaje publicado comun entre partners. PartnerIntegration actua como
+     * frontera de traduccion (ACL) para que esos modelos no contaminen el
+     * resto de la plataforma.
+     */
+    B2B2CPartners [U] -> [D,ACL] PartnerIntegration
+
+    /*
+     * El proveedor de pagos expone una API publica (OHS/PL); Payments aisla
+     * ese modelo externo del modelo interno mediante ACL.
+     */
+    PaymentProviders [U,OHS,PL] -> [D,ACL] Payments
+
+    /* ============ Cadena de proveedores ============ */
+
+    /*
+     * La acreditacion depende de los datos maestros del registro; como ambos
+     * contextos pertenecen al mismo equipo, se usa Customer/Supplier para que
+     * las necesidades de acreditacion influyan en el backlog del registro.
+     */
+    ProviderRegistry [U,S] -> [D,C] ProviderAccreditation
+
+    /*
+     * La acreditacion publica estados y alcances de acreditacion como lenguaje
+     * estable (OHS/PL); el matching los consume tal cual (Conformist), pues el
+     * lenguaje publicado ya es generico y neutral.
+     */
+    ProviderAccreditation [U,OHS,PL] -> [D,CF] ProviderMatching
+
+    /* ============ Flujo de trabajos ============ */
+
+    /*
+     * El intake entrega trabajos diagnosticados y bien especificados; la
+     * orquestacion es su cliente y sus necesidades influyen en la evolucion
+     * del intake (Customer/Supplier).
+     */
+    MarketplaceIntake [U,S] -> [D,C] WorkOrchestration
+
+    /*
+     * Asignacion y orquestacion evolucionan juntas: la orquestacion solicita
+     * candidatos y reasignaciones, y el matching necesita el contexto del
+     * trabajo. Dependencia mutua y objetivos compartidos: Partnership.
+     */
+    ProviderMatching [P] <-> [P] WorkOrchestration
+
+    /*
+     * Las cotizaciones bloquean y desbloquean pasos del flujo, y los cambios
+     * de alcance generan nuevas cotizaciones: dependencia mutua gestionada por
+     * el mismo equipo, modelada como Partnership.
+     */
+    Quotations [P] <-> [P] WorkOrchestration
+
+    /*
+     * PartnerIntegration publica los trabajos originados por partners ya
+     * traducidos a un lenguaje interno unico (OHS/PL); la orquestacion los
+     * consume sin conocer los modelos particulares de cada partner.
+     */
+    PartnerIntegration [U,OHS,PL] -> [D,CF] WorkOrchestration
+
+    /*
+     * Las reglas, SLAs y compliance de cada partner se exponen como servicio
+     * de evaluacion (OHS/PL) para que no queden dispersas dentro de la
+     * orquestacion.
+     */
+    PartnerRules [U,OHS,PL] -> [D,CF] WorkOrchestration
+
+    /*
+     * La orquestacion publica los eventos del ciclo de vida del trabajo;
+     * calidad y disputas los consume para abrir reclamos y garantias.
+     */
+    WorkOrchestration [U,OHS,PL] -> [D,CF] QualityAndDisputes
+
+    /*
+     * El scoring consume la historia de trabajos publicada por la
+     * orquestacion, pero la traduce a su propio modelo de riesgo (ACL) para
+     * no acoplarse al modelo operacional.
+     */
+    WorkOrchestration [U,OHS,PL] -> [D,ACL] CreditScoring
+
+    /* ============ Fintech ============ */
+
+    /*
+     * Payments publica eventos de pago y liquidacion; la wallet los traduce a
+     * su propio modelo contable de saldos y movimientos (ACL).
+     */
+    Payments [U,OHS,PL] -> [D,ACL] ProviderWallet
+
+    /*
+     * El scoring publica puntajes y niveles de riesgo como lenguaje estable;
+     * el prestamo los consume para originar creditos.
+     */
+    CreditScoring [U,OHS,PL] -> [D,CF] MicroLending
+
+    /*
+     * Los desembolsos y cobros de prestamos se ejecutan sobre la wallet; las
+     * necesidades de MicroLending influyen en el backlog de la wallet
+     * (Customer/Supplier dentro del mismo equipo fintech).
+     */
+    ProviderWallet [U,S] -> [D,C] MicroLending
+
+    /* ============ Servicios recurrentes (reutilizacion sin compartir modelos) ============ */
+
+    /*
+     * RecurringServices reutiliza acreditacion, matching, orquestacion y pagos
+     * unicamente a traves de sus interfaces publicadas (OHS/PL), sin acceder a
+     * modelos internos. Se usa Conformist porque los lenguajes publicados son
+     * estables y genericos.
+     */
+    ProviderAccreditation [U,OHS,PL] -> [D,CF] RecurringServices
+
+    ProviderMatching [U,OHS,PL] -> [D,CF] RecurringServices
+
+    WorkOrchestration [U,OHS,PL] -> [D,CF] RecurringServices
+
+    Payments [U,OHS,PL] -> [D,CF] RecurringServices
+
+    /* ============ Expansion regional ============ */
+
+    /*
+     * RegionalOperations expone moneda, zona horaria, regulacion y calendario
+     * por pais como configuracion publicada (OHS/PL). Los contextos afectados
+     * por diferencias regionales la consumen sin duplicar la arquitectura por
+     * pais.
+     */
+    RegionalOperations [U,OHS,PL] -> [D,CF] Payments
+
+    RegionalOperations [U,OHS,PL] -> [D,CF] MarketplaceIntake
+
+    RegionalOperations [U,OHS,PL] -> [D,CF] ProviderAccreditation
+
+    RegionalOperations [U,OHS,PL] -> [D,CF] PartnerRules
+}
+
+/* ============ Bounded Contexts internos ============ */
+
+BoundedContext ProviderRegistry implements ProviderRegistrationSD {
+    type = APPLICATION
+    domainVisionStatement = "Fuente de verdad sobre quien es cada proveedor: identidad, datos de contacto, servicios ofrecidos y zonas de cobertura. Punto de entrada del onboarding de proveedores individuales y empresas."
+    responsibilities = "Registro y onboarding de proveedores", "Datos maestros de proveedores", "Servicios y zonas de cobertura declarados"
+}
+
+BoundedContext ProviderAccreditation implements ProviderTrustAndAccreditationSD {
+    type = APPLICATION
+    domainVisionStatement = "Controla la verificacion y acreditacion de proveedores: antecedentes, certificaciones, homologaciones y revalidaciones periodicas. Decide que servicios y trabajos puede ejecutar cada proveedor y protege ese modelo frente a las autoridades externas de verificacion."
+    responsibilities = "Verificaciones individuales y empresariales", "Acreditacion por servicio y tipo de trabajo", "Revalidaciones periodicas", "Traduccion de resultados de autoridades externas"
+}
+
+BoundedContext MarketplaceIntake implements JobDiagnosisAndIntakeSD {
+    type = APPLICATION
+    domainVisionStatement = "Captura las solicitudes de los clientes y diagnostica el trabajo requerido, con apoyo de asistencia inteligente, para convertir una necesidad del hogar en un trabajo ejecutable bien especificado."
+    responsibilities = "Captura de solicitudes", "Diagnostico asistido del trabajo", "Especificacion inicial del trabajo"
+}
+
+BoundedContext ProviderMatching implements ProviderMatchingSD, ProviderReputationSD {
+    type = APPLICATION
+    domainVisionStatement = "Selecciona candidatos y asigna proveedores a trabajos combinando categoria, zona, disponibilidad, acreditacion vigente y reputacion. Mantiene la reputacion de proveedores como insumo directo de la asignacion."
+    responsibilities = "Seleccion y asignacion de proveedores", "Gestion de disponibilidad", "Reputacion de proveedores"
+}
+
+BoundedContext WorkOrchestration implements WorkOrchestrationSD, ExecutionTrackingSD {
+    type = APPLICATION
+    domainVisionStatement = "Coordina dinamicamente el ciclo de vida de cada trabajo: subtrabajos, dependencias, pasos paralelos, actividades bloqueantes, rediagnosticos, reasignaciones y cambios de alcance. Publica los eventos del ciclo de vida del trabajo que consumen los demas contextos."
+    responsibilities = "Construccion dinamica del flujo de trabajo", "Coordinacion de subtrabajos y dependencias", "Seguimiento de la ejecucion en campo", "Publicacion de eventos del ciclo de vida"
+}
+
+BoundedContext Quotations implements QuotationManagementSD {
+    type = APPLICATION
+    domainVisionStatement = "Gestiona la elaboracion, negociacion, aprobacion y versionado de cotizaciones ligadas a trabajos y cambios de alcance, controlando el vinculo entre el precio aprobado y el trabajo ejecutado."
+    responsibilities = "Elaboracion y versionado de cotizaciones", "Negociacion y aprobacion", "Cotizaciones por cambio de alcance"
+}
+
+BoundedContext PartnerIntegration implements PartnerIntegrationSD, PartnerBillingSD {
+    type = APPLICATION
+    domainVisionStatement = "Frontera de traduccion con aseguradoras, bancos y comercios B2B2C: recibe los trabajos originados por partners y los normaliza a un lenguaje interno unico, evitando que los modelos particulares de cada partner contaminen la operacion. Gestiona ademas la facturacion hacia los partners."
+    responsibilities = "Integracion B2B2C", "Traduccion de modelos de partners", "Facturacion y liquidacion a partners"
+}
+
+BoundedContext PartnerRules implements PartnerRulesAndComplianceSD {
+    type = APPLICATION
+    domainVisionStatement = "Posee las reglas de negocio, SLAs, homologaciones y requisitos de compliance de cada partner B2B2C y los expone como servicio de evaluacion, evitando que esas reglas queden dispersas en la orquestacion de trabajos."
+    responsibilities = "Reglas y SLAs por partner", "Homologaciones", "Evaluacion de compliance de partner"
+}
+
+BoundedContext QualityAndDisputes implements QualityDisputesAndWarrantiesSD, EvidenceManagementSD {
+    type = APPLICATION
+    domainVisionStatement = "Gestiona la calidad, las disputas, los reclamos y las garantias sobre trabajos ejecutados, apoyandose en las evidencias (fotos, documentos, actas) recolectadas durante el diagnostico y la ejecucion."
+    responsibilities = "Disputas y reclamos", "Garantias", "Gestion de evidencias", "Indicadores de calidad"
+}
+
+BoundedContext Payments implements PaymentProcessingSD {
+    type = APPLICATION
+    domainVisionStatement = "Procesa los pagos de clientes y los desembolsos de la plataforma, aislando el modelo del proveedor externo de pagos detras de una capa anticorrupcion y publicando eventos de pago y liquidacion al resto de la plataforma."
+    responsibilities = "Cobros a clientes", "Desembolsos", "Aislamiento del proveedor externo de pagos", "Publicacion de eventos de pago"
+}
+
+BoundedContext RecurringServices implements RecurringServiceOrchestrationSD, SubscriptionManagementSD, RecurringSchedulingSD, SubscriptionBillingSD {
+    type = APPLICATION
+    domainVisionStatement = "Gestiona el nuevo negocio de servicios recurrentes por suscripcion (limpieza, jardineria, empleadas domesticas): planes, programacion periodica de visitas, coordinacion de la prestacion continua y cobro recurrente, reutilizando acreditacion, asignacion, orquestacion y pagos solo a traves de sus interfaces publicadas."
+    responsibilities = "Suscripciones y planes", "Programacion periodica de visitas", "Coordinacion de la prestacion continua", "Cobro recurrente"
+}
+
+BoundedContext ProviderWallet implements ProviderWalletSD {
+    type = APPLICATION
+    domainVisionStatement = "Billetera del proveedor: saldos, movimientos y disposicion de liquidez, construida a partir de los eventos de liquidacion de pagos; soporta ademas desembolsos y cobros de microprestamos."
+    responsibilities = "Saldos y movimientos", "Disposicion de liquidez", "Soporte a desembolsos y cobros de prestamos"
+}
+
+BoundedContext CreditScoring implements WorkHistoryCreditScoringSD {
+    type = APPLICATION
+    domainVisionStatement = "Calcula el scoring crediticio de los proveedores a partir de su historia de trabajos, desempeno, reputacion y actividad dentro de la plataforma. Esta informacion propia de HdA es el diferenciador de sus productos financieros."
+    responsibilities = "Modelo de riesgo basado en historia de trabajos", "Calculo y publicacion de puntajes", "Niveles de riesgo por proveedor"
+}
+
+BoundedContext MicroLending implements MicroLendingSD, FinancialRiskAndComplianceSD {
+    type = APPLICATION
+    domainVisionStatement = "Origina y administra microprestamos a proveedores usando el scoring propio de HdA, incluyendo la gestion generica de riesgo financiero y el cumplimiento regulatorio de los productos de credito."
+    responsibilities = "Originacion de microprestamos", "Gestion de cartera", "Riesgo financiero y compliance"
+}
+
+BoundedContext RegionalOperations implements LocalizationSD {
+    type = APPLICATION
+    domainVisionStatement = "Encapsula las particularidades de cada pais de operacion (Colombia, Mexico, Brasil, Argentina): moneda, zona horaria, regulacion, catalogo de partners locales y estacionalidad, y las expone como configuracion y reglas publicadas para que las diferencias regionales no contaminen los demas contextos."
+    responsibilities = "Configuracion por pais (moneda y zona horaria)", "Regulacion local", "Catalogo de partners locales", "Calendario y estacionalidad regional"
+}

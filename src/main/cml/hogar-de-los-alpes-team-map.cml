@@ -1,0 +1,62 @@
+/*
+ * Hogar de los Alpes - Mapa de equipos (ownership) para el TO-BE.
+ *
+ * Se define en un archivo separado porque el DSL de ContextMapper permite un
+ * unico ContextMap por archivo. Cada Bounded Context interno tiene exactamente
+ * un equipo propietario; un equipo puede poseer varios contextos.
+ */
+
+import "./hogar-de-los-alpes-to-be.cml"
+
+ContextMap HogarDeLosAlpesTeamMap {
+    type = ORGANIZATIONAL
+    state = TO_BE
+
+    /*
+     * El mapa organizacional contiene los equipos y tambien los contextos que
+     * realizan, porque el generador grafico necesita ambos para dibujar la
+     * relacion equipo -> contexto.
+     */
+    contains ServiceProvidersTeam, ClaimsTeam, MarketplaceTeam, WorkManagementTeam, FintechTeam, QualityAndDisputesTeam
+    contains ProviderRegistry, ProviderAccreditation, MarketplaceIntake, ProviderMatching, RegionalOperations
+    contains WorkOrchestration, Quotations, RecurringServices, PartnerIntegration, PartnerRules
+    contains Payments, ProviderWallet, CreditScoring, MicroLending, QualityAndDisputes
+}
+
+/* Equipo de Proveedores de Servicio: registro y acreditacion. */
+BoundedContext ServiceProvidersTeam realizes ProviderRegistry, ProviderAccreditation {
+    type = TEAM
+}
+
+/* Equipo de Siniestros: integraciones B2B2C y reglas de partner. */
+BoundedContext ClaimsTeam realizes PartnerIntegration, PartnerRules {
+    type = TEAM
+}
+
+/*
+ * Equipo de Marketplace / Proveedores: publicacion, busqueda y asistente
+ * inteligente. Se le asigna tambien RegionalOperations por su cercania con la
+ * operacion del marketplace en cada pais (decision discutible, documentada).
+ */
+BoundedContext MarketplaceTeam realizes MarketplaceIntake, ProviderMatching, RegionalOperations {
+    type = TEAM
+}
+
+/*
+ * Equipo de Gestion de Trabajos: workflows y cotizaciones. Se le asigna
+ * tambien el nuevo negocio de servicios recurrentes por su afinidad con la
+ * orquestacion de trabajos (decision discutible, documentada).
+ */
+BoundedContext WorkManagementTeam realizes WorkOrchestration, Quotations, RecurringServices {
+    type = TEAM
+}
+
+/* Equipo Fintech: pagos, wallet, scoring y prestamos. */
+BoundedContext FintechTeam realizes Payments, ProviderWallet, CreditScoring, MicroLending {
+    type = TEAM
+}
+
+/* Equipo de Calidad y Disputas. */
+BoundedContext QualityAndDisputesTeam realizes QualityAndDisputes {
+    type = TEAM
+}

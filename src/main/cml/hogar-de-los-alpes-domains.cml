@@ -1,0 +1,166 @@
+/*
+ * Hogar de los Alpes (HdA) - Dominios y subdominios.
+ *
+ * Los subdominios representan capacidades del negocio descubiertas en el caso.
+ * Los Bounded Contexts (definidos en los mapas AS-IS y TO-BE) son los limites
+ * de software disenados para implementar esas capacidades.
+ *
+ * Este archivo tambien define los sistemas externos compartidos por los mapas
+ * AS-IS y TO-BE, para evitar duplicar definiciones entre archivos.
+ */
+
+/* ================= Dominio actual: servicios puntuales para el hogar ================= */
+
+Domain HomeServices {
+    domainVisionStatement = "Hogar de los Alpes conecta las necesidades de servicios para el hogar con proveedores confiables y coordina el ciclo de vida completo de los trabajos, desde su diagnostico y asignacion hasta su ejecucion, pago, seguimiento y garantia."
+
+    /* ---- CORE ---- */
+
+    Subdomain WorkOrchestrationSD {
+        type = CORE_DOMAIN
+        domainVisionStatement = "Construccion y coordinacion dinamica del flujo de cada trabajo: subtrabajos, dependencias, pasos paralelos, actividades bloqueantes, rediagnosticos, reasignaciones y cambios de alcance durante la ejecucion."
+    }
+
+    Subdomain ProviderTrustAndAccreditationSD {
+        type = CORE_DOMAIN
+        domainVisionStatement = "Verificacion y acreditacion de proveedores individuales y empresas. Determina que servicios y trabajos puede ejecutar cada proveedor, incluyendo verificaciones individuales, empresariales y revalidaciones periodicas."
+    }
+
+    Subdomain ProviderMatchingSD {
+        type = CORE_DOMAIN
+        domainVisionStatement = "Seleccion y asignacion de proveedores para cada trabajo segun categoria de servicio, zona, disponibilidad, acreditacion vigente y reputacion."
+    }
+
+    /* ---- SUPPORTING ---- */
+
+    Subdomain ProviderRegistrationSD {
+        type = SUPPORTING_DOMAIN
+        domainVisionStatement = "Registro e incorporacion de proveedores a la plataforma: identidad, datos de contacto, servicios ofrecidos y zonas de cobertura."
+    }
+
+    Subdomain JobDiagnosisAndIntakeSD {
+        type = SUPPORTING_DOMAIN
+        domainVisionStatement = "Captura de solicitudes de clientes y diagnostico del trabajo requerido, para convertir una necesidad del hogar en un trabajo ejecutable bien especificado."
+    }
+
+    Subdomain QuotationManagementSD {
+        type = SUPPORTING_DOMAIN
+        domainVisionStatement = "Elaboracion, negociacion y aprobacion de cotizaciones asociadas a trabajos y a cambios de alcance."
+    }
+
+    Subdomain PartnerIntegrationSD {
+        type = SUPPORTING_DOMAIN
+        domainVisionStatement = "Integracion B2B2C con aseguradoras, bancos y comercios que originan trabajos hacia la plataforma (por ejemplo, siniestros)."
+    }
+
+    Subdomain PartnerRulesAndComplianceSD {
+        type = SUPPORTING_DOMAIN
+        domainVisionStatement = "Reglas, SLAs, homologaciones y requisitos de cumplimiento particulares de cada partner B2B2C."
+    }
+
+    Subdomain ExecutionTrackingSD {
+        type = SUPPORTING_DOMAIN
+        domainVisionStatement = "Seguimiento del estado y avance de los trabajos en campo durante su ejecucion."
+    }
+
+    Subdomain QualityDisputesAndWarrantiesSD {
+        type = SUPPORTING_DOMAIN
+        domainVisionStatement = "Gestion de calidad, disputas, reclamos y garantias sobre trabajos ejecutados."
+    }
+
+    Subdomain ProviderReputationSD {
+        type = SUPPORTING_DOMAIN
+        domainVisionStatement = "Calculo y mantenimiento de la reputacion de proveedores a partir de resultados de trabajos, calificaciones y disputas."
+    }
+
+    Subdomain EvidenceManagementSD {
+        type = SUPPORTING_DOMAIN
+        domainVisionStatement = "Gestion de evidencias (fotos, documentos, actas) que soportan el diagnostico, la ejecucion, la calidad y las garantias de los trabajos."
+    }
+
+    Subdomain PartnerBillingSD {
+        type = SUPPORTING_DOMAIN
+        domainVisionStatement = "Facturacion y liquidacion hacia los partners B2B2C por los trabajos originados por ellos."
+    }
+
+    /* ---- GENERIC ---- */
+
+    Subdomain PaymentProcessingSD {
+        type = GENERIC_SUBDOMAIN
+        domainVisionStatement = "Procesamiento de pagos y cobros a traves de un proveedor externo de pagos."
+    }
+
+    Subdomain LocalizationSD {
+        type = GENERIC_SUBDOMAIN
+        domainVisionStatement = "Aspectos genericos de localizacion por pais, como moneda y zona horaria. No incluye reglas de negocio especificas de cada partner."
+    }
+}
+
+/* ================= Dominio TO-BE: servicios recurrentes por suscripcion ================= */
+
+Domain RecurringHomeServices {
+    domainVisionStatement = "Gestionar servicios recurrentes para el hogar mediante suscripciones y programacion periodica, permitiendo coordinar de forma confiable la prestacion continua de servicios."
+
+    Subdomain RecurringServiceOrchestrationSD {
+        type = CORE_DOMAIN
+        domainVisionStatement = "Coordinacion de la prestacion continua de servicios recurrentes (limpieza, jardineria, empleadas domesticas), incluyendo la generacion y supervision de cada visita periodica."
+    }
+
+    Subdomain SubscriptionManagementSD {
+        type = SUPPORTING_DOMAIN
+        domainVisionStatement = "Ciclo de vida de las suscripciones: contratacion, cambios de plan, pausas y cancelaciones."
+    }
+
+    Subdomain RecurringSchedulingSD {
+        type = SUPPORTING_DOMAIN
+        domainVisionStatement = "Programacion periodica de visitas, gestion de calendarios y reprogramaciones."
+    }
+
+    Subdomain SubscriptionBillingSD {
+        type = GENERIC_SUBDOMAIN
+        domainVisionStatement = "Facturacion y cobro periodico de suscripciones."
+    }
+}
+
+/* ================= Dominio TO-BE: fintech para proveedores ================= */
+
+Domain ProviderFintech {
+    domainVisionStatement = "Ofrecer servicios financieros a proveedores de Hogar de los Alpes utilizando su actividad y desempeno dentro de la plataforma para mejorar su acceso a pagos, liquidez y credito."
+
+    Subdomain WorkHistoryCreditScoringSD {
+        type = CORE_DOMAIN
+        domainVisionStatement = "Scoring crediticio basado en la historia de trabajos, desempeno y reputacion de los proveedores dentro de HdA. Esta informacion propia es el diferenciador del dominio, no el hecho generico de tener una wallet."
+    }
+
+    Subdomain ProviderWalletSD {
+        type = SUPPORTING_DOMAIN
+        domainVisionStatement = "Billetera del proveedor para recibir pagos, consultar saldos y disponer de liquidez."
+    }
+
+    Subdomain MicroLendingSD {
+        type = SUPPORTING_DOMAIN
+        domainVisionStatement = "Originacion y gestion de microprestamos a proveedores, apoyados en el scoring propio de HdA."
+    }
+
+    Subdomain FinancialRiskAndComplianceSD {
+        type = GENERIC_SUBDOMAIN
+        domainVisionStatement = "Gestion generica de riesgo financiero y cumplimiento regulatorio de los productos financieros."
+    }
+}
+
+/* ================= Sistemas externos (compartidos por AS-IS y TO-BE) ================= */
+
+BoundedContext B2B2CPartners {
+    type = SYSTEM
+    domainVisionStatement = "Sistemas de aseguradoras, bancos y comercios aliados B2B2C que originan trabajos hacia HdA; cada partner tiene modelo, reglas, SLAs, homologaciones y compliance propios."
+}
+
+BoundedContext VerificationAuthorities {
+    type = SYSTEM
+    domainVisionStatement = "Sistemas externos de verificacion de proveedores: policia y antecedentes, registros empresariales y entidades certificadoras."
+}
+
+BoundedContext PaymentProviders {
+    type = SYSTEM
+    domainVisionStatement = "Proveedor externo utilizado para procesar pagos. El caso no especifica un proveedor concreto, por lo que no se nombra ninguno."
+}

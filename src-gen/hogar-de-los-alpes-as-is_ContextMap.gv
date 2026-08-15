@@ -1,0 +1,22 @@
+digraph "ContextMapGraph" {
+graph ["imagepath"="C:\Users\danie\AppData\Local\Temp\GraphvizJava"]
+"B2B2CPartners" ["margin"="0.3","orientation"="100","shape"="egg","fontsize"="16","style"="bold","label"="B2B2CPartners\n","fontname"="sans-serif"]
+"HogarDeLosAlpesMonolith" ["margin"="0.3","orientation"="56","shape"="egg","fontsize"="16","style"="bold","label"="HogarDeLosAlpesMonolith\n","fontname"="sans-serif"]
+"PaymentProviders" ["margin"="0.3","orientation"="256","shape"="egg","fontsize"="16","style"="bold","label"="PaymentProviders\n","fontname"="sans-serif"]
+"VerificationAuthorities" ["margin"="0.3","orientation"="321","shape"="egg","fontsize"="16","style"="bold","label"="VerificationAuthorities\n","fontname"="sans-serif"]
+"B2B2CPartners" -> "HogarDeLosAlpesMonolith" ["headlabel"=<<table cellspacing="0" cellborder="1" border="0">
+<tr><td bgcolor="white" sides="r">D</td><td sides="trbl" bgcolor="white"><font>CF</font></td></tr>
+</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">U</td></tr>
+</table>>,"style"="bold","label"="                                                                                ","dir"="none","fontname"="sans-serif"]
+"PaymentProviders" -> "HogarDeLosAlpesMonolith" ["headlabel"=<<table cellspacing="0" cellborder="1" border="0">
+<tr><td bgcolor="white" sides="r">D</td><td sides="trbl" bgcolor="white"><font>CF</font></td></tr>
+</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="1" border="0">
+<tr><td bgcolor="white" sides="r">U</td><td sides="trbl" bgcolor="white"><font>OHS, PL</font></td></tr>
+</table>>,"style"="bold","label"="                                                                                ","dir"="none","fontname"="sans-serif"]
+"VerificationAuthorities" -> "HogarDeLosAlpesMonolith" ["headlabel"=<<table cellspacing="0" cellborder="1" border="0">
+<tr><td bgcolor="white" sides="r">D</td><td sides="trbl" bgcolor="white"><font>CF</font></td></tr>
+</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">U</td></tr>
+</table>>,"style"="bold","label"="                                                                                ","dir"="none","fontname"="sans-serif"]
+}

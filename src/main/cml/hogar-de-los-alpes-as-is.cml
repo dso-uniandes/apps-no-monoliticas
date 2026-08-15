@@ -1,0 +1,49 @@
+/*
+ * Hogar de los Alpes - Context Map AS-IS.
+ *
+ * Toda la operacion vive hoy en un monolito construido desde 2016. Los equipos
+ * tienen responsabilidades distintas pero comparten el mismo codigo, por lo que
+ * no pueden evolucionar de forma independiente. Por eso el AS-IS tiene un unico
+ * contexto interno (el monolito) mas los sistemas externos reales del caso.
+ */
+
+import "./hogar-de-los-alpes-domains.cml"
+
+ContextMap HogarDeLosAlpesAsIsContextMap {
+    type = SYSTEM_LANDSCAPE
+    state = AS_IS
+
+    contains HogarDeLosAlpesMonolith, B2B2CPartners, VerificationAuthorities, PaymentProviders
+
+    /*
+     * Integraciones B2B2C particulares por partner: el monolito se adapta al
+     * modelo, reglas y SLAs de cada aseguradora, banco o comercio sin una
+     * frontera de traduccion explicita. No hay evidencia de un lenguaje
+     * publicado comun del lado de los partners, asi que se usa el patron
+     * conservador Conformist en el downstream.
+     */
+    B2B2CPartners [U] -> [D,CF] HogarDeLosAlpesMonolith
+
+    /*
+     * La verificacion de proveedores es en gran parte manual: agentes humanos
+     * consultan directamente los sistemas externos (policia, registros
+     * empresariales, certificadoras) y registran los resultados en el monolito.
+     * No existe capa anticorrupcion, por lo que se modela como Conformist.
+     */
+    VerificationAuthorities [U] -> [D,CF] HogarDeLosAlpesMonolith
+
+    /*
+     * El monolito procesa pagos consumiendo directamente la API publica del
+     * proveedor externo de pagos (OHS/PL del lado del proveedor). No hay
+     * evidencia de una capa anticorrupcion interna, asi que el downstream se
+     * modela conservadoramente como Conformist.
+     */
+    PaymentProviders [U,OHS,PL] -> [D,CF] HogarDeLosAlpesMonolith
+}
+
+BoundedContext HogarDeLosAlpesMonolith implements WorkOrchestrationSD, ProviderTrustAndAccreditationSD, ProviderMatchingSD, ProviderRegistrationSD, JobDiagnosisAndIntakeSD, QuotationManagementSD, PartnerIntegrationSD, PartnerRulesAndComplianceSD, ExecutionTrackingSD, QualityDisputesAndWarrantiesSD, ProviderReputationSD, EvidenceManagementSD, PartnerBillingSD, PaymentProcessingSD, LocalizationSD {
+    type = APPLICATION
+    domainVisionStatement = "Aplicacion monolitica que concentra actualmente las capacidades de marketplace, proveedores, acreditacion, trabajos, cotizaciones, siniestros, integraciones B2B2C, pagos y gestion operativa de Hogar de los Alpes."
+    responsibilities = "Marketplace y publicacion de servicios", "Registro y acreditacion de proveedores", "Diagnostico y gestion de trabajos", "Cotizaciones", "Siniestros e integraciones B2B2C", "Reglas y compliance de partners", "Pagos", "Calidad, disputas y garantias", "Gestion operativa regional"
+    knowledgeLevel = CONCRETE
+}
