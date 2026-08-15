@@ -31,16 +31,23 @@ Domain HomeServices {
         domainVisionStatement = "Seleccion y asignacion de proveedores para cada trabajo segun categoria de servicio, zona, disponibilidad, acreditacion vigente y reputacion."
     }
 
+    /*
+     * CORE: el diagnostico inteligente de la solicitud determina la naturaleza
+     * del problema, su categoria, urgencia, ubicacion, evidencia y la
+     * especificacion inicial del trabajo. Ademas, HdA busca ampliar el uso de
+     * agentes inteligentes dentro de su operacion, por lo que esta capacidad
+     * es diferenciadora y no meramente de soporte.
+     */
+    Subdomain JobDiagnosisAndIntakeSD {
+        type = CORE_DOMAIN
+        domainVisionStatement = "Captura de solicitudes de clientes y diagnostico inteligente del trabajo requerido: naturaleza del problema, categoria, urgencia, ubicacion, evidencia y especificacion inicial. Convierte una necesidad del hogar en un trabajo ejecutable bien especificado y es la base para ampliar el uso de agentes inteligentes en la operacion."
+    }
+
     /* ---- SUPPORTING ---- */
 
     Subdomain ProviderRegistrationSD {
         type = SUPPORTING_DOMAIN
         domainVisionStatement = "Registro e incorporacion de proveedores a la plataforma: identidad, datos de contacto, servicios ofrecidos y zonas de cobertura."
-    }
-
-    Subdomain JobDiagnosisAndIntakeSD {
-        type = SUPPORTING_DOMAIN
-        domainVisionStatement = "Captura de solicitudes de clientes y diagnostico del trabajo requerido, para convertir una necesidad del hogar en un trabajo ejecutable bien especificado."
     }
 
     Subdomain QuotationManagementSD {
@@ -83,11 +90,32 @@ Domain HomeServices {
         domainVisionStatement = "Facturacion y liquidacion hacia los partners B2B2C por los trabajos originados por ellos."
     }
 
+    /*
+     * Capacidad TO-BE mencionada en el caso: priorizacion de siniestros
+     * originados por partners B2B2C. La IA es un mecanismo dentro de esta
+     * capacidad, no un dominio independiente.
+     */
+    Subdomain ClaimsPrioritizationSD {
+        type = SUPPORTING_DOMAIN
+        domainVisionStatement = "Priorizacion de siniestros originados por partners B2B2C segun urgencia, SLA, impacto y capacidad operativa, para decidir el orden de atencion de los trabajos derivados."
+    }
+
+    /*
+     * Particularidades por pais mas alla de moneda y zona horaria: regulacion,
+     * partners locales, reglas operativas, diferencias de operacion y
+     * estacionalidad. Es SUPPORTING porque habilita la expansion regional sin
+     * ser el diferenciador central del negocio.
+     */
+    Subdomain RegionalOperationsSD {
+        type = SUPPORTING_DOMAIN
+        domainVisionStatement = "Particularidades regulatorias por pais, catalogo de partners locales, reglas operativas regionales, diferencias de operacion y estacionalidad y condiciones regionales, encapsuladas para que no contaminen los demas subdominios."
+    }
+
     /* ---- GENERIC ---- */
 
     Subdomain PaymentProcessingSD {
         type = GENERIC_SUBDOMAIN
-        domainVisionStatement = "Procesamiento de pagos y cobros a traves de un proveedor externo de pagos."
+        domainVisionStatement = "Procesamiento de pagos y cobros dentro de la plataforma. El caso no especifica ninguna pasarela o proveedor externo, por lo que no se modela ninguno."
     }
 
     Subdomain LocalizationSD {
@@ -142,6 +170,16 @@ Domain ProviderFintech {
         domainVisionStatement = "Originacion y gestion de microprestamos a proveedores, apoyados en el scoring propio de HdA."
     }
 
+    /*
+     * Capacidad TO-BE mencionada en el caso: agentes de finanzas y riesgo con
+     * deteccion de fraude. La IA es un mecanismo dentro de esta capacidad, no
+     * un dominio independiente.
+     */
+    Subdomain FraudDetectionSD {
+        type = SUPPORTING_DOMAIN
+        domainVisionStatement = "Deteccion de fraude en la actividad de la plataforma (pagos, trabajos, proveedores y siniestros) usando la informacion propia de HdA como insumo de los modelos de riesgo."
+    }
+
     Subdomain FinancialRiskAndComplianceSD {
         type = GENERIC_SUBDOMAIN
         domainVisionStatement = "Gestion generica de riesgo financiero y cumplimiento regulatorio de los productos financieros."
@@ -160,7 +198,7 @@ BoundedContext VerificationAuthorities {
     domainVisionStatement = "Sistemas externos de verificacion de proveedores: policia y antecedentes, registros empresariales y entidades certificadoras."
 }
 
-BoundedContext PaymentProviders {
-    type = SYSTEM
-    domainVisionStatement = "Proveedor externo utilizado para procesar pagos. El caso no especifica un proveedor concreto, por lo que no se nombra ninguno."
-}
+/*
+ * Nota: no se modela ningun proveedor externo de pagos. El caso indica que los
+ * pagos se procesan en la plataforma y no especifica ninguna pasarela.
+ */

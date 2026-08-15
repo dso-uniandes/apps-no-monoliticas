@@ -13,7 +13,7 @@ ContextMap HogarDeLosAlpesAsIsContextMap {
     type = SYSTEM_LANDSCAPE
     state = AS_IS
 
-    contains HogarDeLosAlpesMonolith, B2B2CPartners, VerificationAuthorities, PaymentProviders
+    contains HogarDeLosAlpesMonolith, B2B2CPartners, VerificationAuthorities
 
     /*
      * Integraciones B2B2C particulares por partner: el monolito se adapta al
@@ -33,15 +33,13 @@ ContextMap HogarDeLosAlpesAsIsContextMap {
     VerificationAuthorities [U] -> [D,CF] HogarDeLosAlpesMonolith
 
     /*
-     * El monolito procesa pagos consumiendo directamente la API publica del
-     * proveedor externo de pagos (OHS/PL del lado del proveedor). No hay
-     * evidencia de una capa anticorrupcion interna, asi que el downstream se
-     * modela conservadoramente como Conformist.
+     * Los pagos se procesan dentro del propio monolito. El caso no especifica
+     * ninguna pasarela o proveedor externo de pagos, por lo que no se modela
+     * ningun sistema externo de pagos.
      */
-    PaymentProviders [U,OHS,PL] -> [D,CF] HogarDeLosAlpesMonolith
 }
 
-BoundedContext HogarDeLosAlpesMonolith implements WorkOrchestrationSD, ProviderTrustAndAccreditationSD, ProviderMatchingSD, ProviderRegistrationSD, JobDiagnosisAndIntakeSD, QuotationManagementSD, PartnerIntegrationSD, PartnerRulesAndComplianceSD, ExecutionTrackingSD, QualityDisputesAndWarrantiesSD, ProviderReputationSD, EvidenceManagementSD, PartnerBillingSD, PaymentProcessingSD, LocalizationSD {
+BoundedContext HogarDeLosAlpesMonolith implements WorkOrchestrationSD, ProviderTrustAndAccreditationSD, ProviderMatchingSD, ProviderRegistrationSD, JobDiagnosisAndIntakeSD, QuotationManagementSD, PartnerIntegrationSD, PartnerRulesAndComplianceSD, ExecutionTrackingSD, QualityDisputesAndWarrantiesSD, ProviderReputationSD, EvidenceManagementSD, PartnerBillingSD, PaymentProcessingSD, RegionalOperationsSD, LocalizationSD {
     type = APPLICATION
     domainVisionStatement = "Aplicacion monolitica que concentra actualmente las capacidades de marketplace, proveedores, acreditacion, trabajos, cotizaciones, siniestros, integraciones B2B2C, pagos y gestion operativa de Hogar de los Alpes."
     responsibilities = "Marketplace y publicacion de servicios", "Registro y acreditacion de proveedores", "Diagnostico y gestion de trabajos", "Cotizaciones", "Siniestros e integraciones B2B2C", "Reglas y compliance de partners", "Pagos", "Calidad, disputas y garantias", "Gestion operativa regional"

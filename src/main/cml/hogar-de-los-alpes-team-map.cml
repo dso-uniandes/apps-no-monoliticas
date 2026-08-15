@@ -17,7 +17,7 @@ ContextMap HogarDeLosAlpesTeamMap {
      * realizan, porque el generador grafico necesita ambos para dibujar la
      * relacion equipo -> contexto.
      */
-    contains ServiceProvidersTeam, ClaimsTeam, MarketplaceTeam, WorkManagementTeam, FintechTeam, QualityAndDisputesTeam
+    contains ServiceProvidersTeam, ClaimsTeam, MarketplaceTeam, WorkManagementTeam, FintechTeam, QualityAndDisputesTeam, RegionalExpansionTeam, RecurringServicesTeam
     contains ProviderRegistry, ProviderAccreditation, MarketplaceIntake, ProviderMatching, RegionalOperations
     contains WorkOrchestration, Quotations, RecurringServices, PartnerIntegration, PartnerRules
     contains Payments, ProviderWallet, CreditScoring, MicroLending, QualityAndDisputes
@@ -35,19 +35,31 @@ BoundedContext ClaimsTeam realizes PartnerIntegration, PartnerRules {
 
 /*
  * Equipo de Marketplace / Proveedores: publicacion, busqueda y asistente
- * inteligente. Se le asigna tambien RegionalOperations por su cercania con la
- * operacion del marketplace en cada pais (decision discutible, documentada).
+ * inteligente de diagnostico.
  */
-BoundedContext MarketplaceTeam realizes MarketplaceIntake, ProviderMatching, RegionalOperations {
+BoundedContext MarketplaceTeam realizes MarketplaceIntake, ProviderMatching {
+    type = TEAM
+}
+
+/* Equipo de Gestion de Trabajos: workflows y cotizaciones. */
+BoundedContext WorkManagementTeam realizes WorkOrchestration, Quotations {
     type = TEAM
 }
 
 /*
- * Equipo de Gestion de Trabajos: workflows y cotizaciones. Se le asigna
- * tambien el nuevo negocio de servicios recurrentes por su afinidad con la
- * orquestacion de trabajos (decision discutible, documentada).
+ * Equipo de Expansion Regional: encapsula las particularidades por pais para
+ * que la expansion no dependa del backlog del marketplace.
  */
-BoundedContext WorkManagementTeam realizes WorkOrchestration, Quotations, RecurringServices {
+BoundedContext RegionalExpansionTeam realizes RegionalOperations {
+    type = TEAM
+}
+
+/*
+ * Equipo de Servicios Recurrentes: nueva linea de negocio de suscripciones,
+ * separada para que pueda evolucionar de manera independiente de la gestion
+ * de trabajos puntuales.
+ */
+BoundedContext RecurringServicesTeam realizes RecurringServices {
     type = TEAM
 }
 
