@@ -21,54 +21,87 @@ ContextMap HogarDeLosAlpesTeamMap {
     contains ProviderRegistry, ProviderAccreditation, MarketplaceIntake, ProviderMatching, RegionalOperations
     contains WorkOrchestration, Quotations, RecurringServices, PartnerIntegration, PartnerRules
     contains Payments, ProviderWallet, CreditScoring, MicroLending, QualityAndDisputes
+
+    /*
+     * Relaciones organizacionales principales, derivadas de las dependencias
+     * reales entre los Bounded Contexts de cada equipo en el TO-BE. No se
+     * copian todas las relaciones del Context Map para mantener el mapa
+     * legible.
+     */
+
+    /* ProviderMatching (Marketplace) depende de ProviderAccreditation: Customer/Supplier. */
+    ServiceProvidersTeam [U,S] -> [D,C] MarketplaceTeam
+
+    /* ProviderMatching y WorkOrchestration colaboran estrechamente y MarketplaceIntake alimenta la gestion de trabajos. */
+    MarketplaceTeam [P] <-> [P] WorkManagementTeam
+
+    /* PartnerIntegration y PartnerRules proveen trabajos y reglas a WorkOrchestration. */
+    ClaimsTeam [U] -> [D] WorkManagementTeam
+
+    /* Calidad, disputas y garantias reaccionan al ciclo de vida de los trabajos. */
+    WorkManagementTeam [U] -> [D] QualityAndDisputesTeam
+
+    /* CreditScoring consume la historia de trabajos publicada por WorkOrchestration. */
+    WorkManagementTeam [U] -> [D] FintechTeam
+
+    /* Los servicios recurrentes dependen de la acreditacion de proveedores. */
+    ServiceProvidersTeam [U] -> [D] RecurringServicesTeam
+
+    /* Los servicios recurrentes usan ProviderMatching; sus necesidades influyen en su backlog. */
+    MarketplaceTeam [U,S] -> [D,C] RecurringServicesTeam
+
+    /* Los servicios recurrentes reutilizan la orquestacion de trabajos publicada por gestion de trabajos. */
+    WorkManagementTeam [U] -> [D] RecurringServicesTeam
+
+    /* Los servicios recurrentes usan Payments para el cobro recurrente. */
+    FintechTeam [U,S] -> [D,C] RecurringServicesTeam
+
+    /* RegionalOperations provee configuracion y reglas regionales a los equipos que operan por pais. */
+    RegionalExpansionTeam [U] -> [D] MarketplaceTeam
+
+    RegionalExpansionTeam [U] -> [D] ServiceProvidersTeam
+
+    RegionalExpansionTeam [U] -> [D] ClaimsTeam
+
+    RegionalExpansionTeam [U] -> [D] FintechTeam
 }
 
-/* Equipo de Proveedores de Servicio: registro y acreditacion. */
 BoundedContext ServiceProvidersTeam realizes ProviderRegistry, ProviderAccreditation {
     type = TEAM
+    domainVisionStatement = "Equipo de Proveedores de Servicio: es dueno del registro, la verificacion y la acreditacion de proveedores, y de decidir que puede ejecutar cada proveedor en la plataforma."
 }
 
-/* Equipo de Siniestros: integraciones B2B2C y reglas de partner. */
 BoundedContext ClaimsTeam realizes PartnerIntegration, PartnerRules {
     type = TEAM
+    domainVisionStatement = "Equipo de Siniestros: es dueno de las integraciones B2B2C con aseguradoras, bancos y comercios, de la priorizacion de siniestros y de las reglas, SLAs y compliance de cada partner."
 }
 
-/*
- * Equipo de Marketplace / Proveedores: publicacion, busqueda y asistente
- * inteligente de diagnostico.
- */
 BoundedContext MarketplaceTeam realizes MarketplaceIntake, ProviderMatching {
     type = TEAM
+    domainVisionStatement = "Equipo de Marketplace / Proveedores: es dueno de la captura y diagnostico inteligente de solicitudes y de la seleccion y asignacion de proveedores segun acreditacion, zona, disponibilidad y reputacion."
 }
 
-/* Equipo de Gestion de Trabajos: workflows y cotizaciones. */
 BoundedContext WorkManagementTeam realizes WorkOrchestration, Quotations {
     type = TEAM
+    domainVisionStatement = "Equipo de Gestion de Trabajos: es dueno de la orquestacion dinamica del ciclo de vida de los trabajos y de las cotizaciones asociadas a trabajos y cambios de alcance."
 }
 
-/*
- * Equipo de Expansion Regional: encapsula las particularidades por pais para
- * que la expansion no dependa del backlog del marketplace.
- */
 BoundedContext RegionalExpansionTeam realizes RegionalOperations {
     type = TEAM
+    domainVisionStatement = "Equipo de Expansion Regional: es dueno de las particularidades por pais (regulacion, partners locales, reglas operativas, estacionalidad, moneda y zona horaria) para habilitar la expansion a Mexico, Brasil y Argentina sin contaminar los demas contextos."
 }
 
-/*
- * Equipo de Servicios Recurrentes: nueva linea de negocio de suscripciones,
- * separada para que pueda evolucionar de manera independiente de la gestion
- * de trabajos puntuales.
- */
 BoundedContext RecurringServicesTeam realizes RecurringServices {
     type = TEAM
+    domainVisionStatement = "Equipo de Servicios Recurrentes: es dueno de la nueva linea de negocio de suscripciones (limpieza, jardineria, empleadas domesticas), separada para evolucionar de manera independiente de los trabajos puntuales."
 }
 
-/* Equipo Fintech: pagos, wallet, scoring y prestamos. */
 BoundedContext FintechTeam realizes Payments, ProviderWallet, CreditScoring, MicroLending {
     type = TEAM
+    domainVisionStatement = "Equipo Fintech: es dueno de los pagos de la plataforma, la wallet de proveedores, el scoring basado en historia de trabajos (incluida la deteccion de fraude) y los microprestamos."
 }
 
-/* Equipo de Calidad y Disputas. */
 BoundedContext QualityAndDisputesTeam realizes QualityAndDisputes {
     type = TEAM
+    domainVisionStatement = "Equipo de Calidad y Disputas: es dueno de la gestion de calidad, disputas, reclamos, garantias y evidencias sobre trabajos ejecutados."
 }

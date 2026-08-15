@@ -1,56 +1,117 @@
 digraph "ContextMapGraph" {
 graph ["imagepath"="C:\Users\danie\AppData\Local\Temp\GraphvizJava"]
-"QualityAndDisputesTeam" ["margin"="0.3","orientation"="29","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>QualityAndDisputesTeam</td></tr></table>>,"fontname"="sans-serif"]
-"QualityAndDisputes" ["margin"="0.3","orientation"="226","shape"="egg","fontsize"="16","style"="bold","label"="QualityAndDisputes\n","fontname"="sans-serif"]
-"MarketplaceTeam" ["margin"="0.3","orientation"="108","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>MarketplaceTeam</td></tr></table>>,"fontname"="sans-serif"]
-"MarketplaceIntake" ["margin"="0.3","orientation"="301","shape"="egg","fontsize"="16","style"="bold","label"="MarketplaceIntake\n","fontname"="sans-serif"]
-"ProviderMatching" ["margin"="0.3","orientation"="290","shape"="egg","fontsize"="16","style"="bold","label"="ProviderMatching\n","fontname"="sans-serif"]
-"ServiceProvidersTeam" ["margin"="0.3","orientation"="298","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>ServiceProvidersTeam</td></tr></table>>,"fontname"="sans-serif"]
-"ProviderRegistry" ["margin"="0.3","orientation"="91","shape"="egg","fontsize"="16","style"="bold","label"="ProviderRegistry\n","fontname"="sans-serif"]
-"ProviderAccreditation" ["margin"="0.3","orientation"="24","shape"="egg","fontsize"="16","style"="bold","label"="ProviderAccreditation\n","fontname"="sans-serif"]
-"RegionalExpansionTeam" ["margin"="0.3","orientation"="111","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>RegionalExpansionTeam</td></tr></table>>,"fontname"="sans-serif"]
-"RegionalOperations" ["margin"="0.3","orientation"="232","shape"="egg","fontsize"="16","style"="bold","label"="RegionalOperations\n","fontname"="sans-serif"]
-"FintechTeam" ["margin"="0.3","orientation"="293","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>FintechTeam</td></tr></table>>,"fontname"="sans-serif"]
+"QualityAndDisputesTeam" ["margin"="0.3","orientation"="105","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>QualityAndDisputesTeam</td></tr></table>>,"fontname"="sans-serif"]
+"QualityAndDisputes" ["margin"="0.3","orientation"="71","shape"="egg","fontsize"="16","style"="bold","label"="QualityAndDisputes\n","fontname"="sans-serif"]
+"MarketplaceTeam" ["margin"="0.3","orientation"="265","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>MarketplaceTeam</td></tr></table>>,"fontname"="sans-serif"]
+"MarketplaceIntake" ["margin"="0.3","orientation"="260","shape"="egg","fontsize"="16","style"="bold","label"="MarketplaceIntake\n","fontname"="sans-serif"]
+"ProviderMatching" ["margin"="0.3","orientation"="22","shape"="egg","fontsize"="16","style"="bold","label"="ProviderMatching\n","fontname"="sans-serif"]
+"ServiceProvidersTeam" ["margin"="0.3","orientation"="220","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>ServiceProvidersTeam</td></tr></table>>,"fontname"="sans-serif"]
+"ProviderRegistry" ["margin"="0.3","orientation"="36","shape"="egg","fontsize"="16","style"="bold","label"="ProviderRegistry\n","fontname"="sans-serif"]
+"ProviderAccreditation" ["margin"="0.3","orientation"="193","shape"="egg","fontsize"="16","style"="bold","label"="ProviderAccreditation\n","fontname"="sans-serif"]
+"RegionalExpansionTeam" ["margin"="0.3","orientation"="344","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>RegionalExpansionTeam</td></tr></table>>,"fontname"="sans-serif"]
+"RegionalOperations" ["margin"="0.3","orientation"="195","shape"="egg","fontsize"="16","style"="bold","label"="RegionalOperations\n","fontname"="sans-serif"]
+"FintechTeam" ["margin"="0.3","orientation"="177","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>FintechTeam</td></tr></table>>,"fontname"="sans-serif"]
 "Payments" ["margin"="0.3","orientation"="313","shape"="egg","fontsize"="16","style"="bold","label"="Payments\n","fontname"="sans-serif"]
-"ProviderWallet" ["margin"="0.3","orientation"="145","shape"="egg","fontsize"="16","style"="bold","label"="ProviderWallet\n","fontname"="sans-serif"]
-"CreditScoring" ["margin"="0.3","orientation"="52","shape"="egg","fontsize"="16","style"="bold","label"="CreditScoring\n","fontname"="sans-serif"]
-"MicroLending" ["margin"="0.3","orientation"="82","shape"="egg","fontsize"="16","style"="bold","label"="MicroLending\n","fontname"="sans-serif"]
-"WorkManagementTeam" ["margin"="0.3","orientation"="343","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>WorkManagementTeam</td></tr></table>>,"fontname"="sans-serif"]
-"WorkOrchestration" ["margin"="0.3","orientation"="151","shape"="egg","fontsize"="16","style"="bold","label"="WorkOrchestration\n","fontname"="sans-serif"]
-"Quotations" ["margin"="0.3","orientation"="222","shape"="egg","fontsize"="16","style"="bold","label"="Quotations\n","fontname"="sans-serif"]
-"RecurringServicesTeam" ["margin"="0.3","orientation"="210","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>RecurringServicesTeam</td></tr></table>>,"fontname"="sans-serif"]
-"RecurringServices" ["margin"="0.3","orientation"="56","shape"="egg","fontsize"="16","style"="bold","label"="RecurringServices\n","fontname"="sans-serif"]
-"ClaimsTeam" ["margin"="0.3","orientation"="115","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>ClaimsTeam</td></tr></table>>,"fontname"="sans-serif"]
-"PartnerIntegration" ["margin"="0.3","orientation"="327","shape"="egg","fontsize"="16","style"="bold","label"="PartnerIntegration\n","fontname"="sans-serif"]
-"PartnerRules" ["margin"="0.3","orientation"="53","shape"="egg","fontsize"="16","style"="bold","label"="PartnerRules\n","fontname"="sans-serif"]
+"ProviderWallet" ["margin"="0.3","orientation"="172","shape"="egg","fontsize"="16","style"="bold","label"="ProviderWallet\n","fontname"="sans-serif"]
+"CreditScoring" ["margin"="0.3","orientation"="287","shape"="egg","fontsize"="16","style"="bold","label"="CreditScoring\n","fontname"="sans-serif"]
+"MicroLending" ["margin"="0.3","orientation"="313","shape"="egg","fontsize"="16","style"="bold","label"="MicroLending\n","fontname"="sans-serif"]
+"WorkManagementTeam" ["margin"="0.3","orientation"="46","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>WorkManagementTeam</td></tr></table>>,"fontname"="sans-serif"]
+"WorkOrchestration" ["margin"="0.3","orientation"="227","shape"="egg","fontsize"="16","style"="bold","label"="WorkOrchestration\n","fontname"="sans-serif"]
+"Quotations" ["margin"="0.3","orientation"="233","shape"="egg","fontsize"="16","style"="bold","label"="Quotations\n","fontname"="sans-serif"]
+"RecurringServicesTeam" ["margin"="0.3","orientation"="157","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>RecurringServicesTeam</td></tr></table>>,"fontname"="sans-serif"]
+"RecurringServices" ["margin"="0.3","orientation"="291","shape"="egg","fontsize"="16","style"="bold","label"="RecurringServices\n","fontname"="sans-serif"]
+"ClaimsTeam" ["margin"="0.3","orientation"="268","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>ClaimsTeam</td></tr></table>>,"fontname"="sans-serif"]
+"PartnerIntegration" ["margin"="0.3","orientation"="54","shape"="egg","fontsize"="16","style"="bold","label"="PartnerIntegration\n","fontname"="sans-serif"]
+"PartnerRules" ["margin"="0.3","orientation"="166","shape"="egg","fontsize"="16","style"="bold","label"="PartnerRules\n","fontname"="sans-serif"]
 subgraph "cluster_GenericSubgraph" {
 graph ["imagepath"="C:\Users\danie\AppData\Local\Temp\GraphvizJava","color"="white"]
-"PartnerIntegration" ["margin"="0.3","orientation"="303","shape"="egg","fontsize"="16","style"="bold","label"="PartnerIntegration\n","fontname"="sans-serif"]
-"ProviderWallet" ["margin"="0.3","orientation"="45","shape"="egg","fontsize"="16","style"="bold","label"="ProviderWallet\n","fontname"="sans-serif"]
-"CreditScoring" ["margin"="0.3","orientation"="201","shape"="egg","fontsize"="16","style"="bold","label"="CreditScoring\n","fontname"="sans-serif"]
-"RegionalOperations" ["margin"="0.3","orientation"="192","shape"="egg","fontsize"="16","style"="bold","label"="RegionalOperations\n","fontname"="sans-serif"]
-"Quotations" ["margin"="0.3","orientation"="5","shape"="egg","fontsize"="16","style"="bold","label"="Quotations\n","fontname"="sans-serif"]
-"ProviderMatching" ["margin"="0.3","orientation"="93","shape"="egg","fontsize"="16","style"="bold","label"="ProviderMatching\n","fontname"="sans-serif"]
-"WorkOrchestration" ["margin"="0.3","orientation"="349","shape"="egg","fontsize"="16","style"="bold","label"="WorkOrchestration\n","fontname"="sans-serif"]
-"Payments" ["margin"="0.3","orientation"="20","shape"="egg","fontsize"="16","style"="bold","label"="Payments\n","fontname"="sans-serif"]
-"PartnerRules" ["margin"="0.3","orientation"="16","shape"="egg","fontsize"="16","style"="bold","label"="PartnerRules\n","fontname"="sans-serif"]
-"ProviderAccreditation" ["margin"="0.3","orientation"="42","shape"="egg","fontsize"="16","style"="bold","label"="ProviderAccreditation\n","fontname"="sans-serif"]
-"QualityAndDisputes" ["margin"="0.3","orientation"="348","shape"="egg","fontsize"="16","style"="bold","label"="QualityAndDisputes\n","fontname"="sans-serif"]
-"MarketplaceIntake" ["margin"="0.3","orientation"="276","shape"="egg","fontsize"="16","style"="bold","label"="MarketplaceIntake\n","fontname"="sans-serif"]
-"RecurringServices" ["margin"="0.3","orientation"="38","shape"="egg","fontsize"="16","style"="bold","label"="RecurringServices\n","fontname"="sans-serif"]
-"MicroLending" ["margin"="0.3","orientation"="160","shape"="egg","fontsize"="16","style"="bold","label"="MicroLending\n","fontname"="sans-serif"]
-"ProviderRegistry" ["margin"="0.3","orientation"="52","shape"="egg","fontsize"="16","style"="bold","label"="ProviderRegistry\n","fontname"="sans-serif"]
+"QualityAndDisputes" ["margin"="0.3","orientation"="243","shape"="egg","fontsize"="16","style"="bold","label"="QualityAndDisputes\n","fontname"="sans-serif"]
+"Payments" ["margin"="0.3","orientation"="97","shape"="egg","fontsize"="16","style"="bold","label"="Payments\n","fontname"="sans-serif"]
+"PartnerRules" ["margin"="0.3","orientation"="99","shape"="egg","fontsize"="16","style"="bold","label"="PartnerRules\n","fontname"="sans-serif"]
+"MicroLending" ["margin"="0.3","orientation"="72","shape"="egg","fontsize"="16","style"="bold","label"="MicroLending\n","fontname"="sans-serif"]
+"PartnerIntegration" ["margin"="0.3","orientation"="251","shape"="egg","fontsize"="16","style"="bold","label"="PartnerIntegration\n","fontname"="sans-serif"]
+"Quotations" ["margin"="0.3","orientation"="39","shape"="egg","fontsize"="16","style"="bold","label"="Quotations\n","fontname"="sans-serif"]
+"MarketplaceIntake" ["margin"="0.3","orientation"="193","shape"="egg","fontsize"="16","style"="bold","label"="MarketplaceIntake\n","fontname"="sans-serif"]
+"ProviderRegistry" ["margin"="0.3","orientation"="35","shape"="egg","fontsize"="16","style"="bold","label"="ProviderRegistry\n","fontname"="sans-serif"]
+"CreditScoring" ["margin"="0.3","orientation"="135","shape"="egg","fontsize"="16","style"="bold","label"="CreditScoring\n","fontname"="sans-serif"]
+"WorkOrchestration" ["margin"="0.3","orientation"="42","shape"="egg","fontsize"="16","style"="bold","label"="WorkOrchestration\n","fontname"="sans-serif"]
+"ProviderWallet" ["margin"="0.3","orientation"="286","shape"="egg","fontsize"="16","style"="bold","label"="ProviderWallet\n","fontname"="sans-serif"]
+"ProviderAccreditation" ["margin"="0.3","orientation"="45","shape"="egg","fontsize"="16","style"="bold","label"="ProviderAccreditation\n","fontname"="sans-serif"]
+"RecurringServices" ["margin"="0.3","orientation"="102","shape"="egg","fontsize"="16","style"="bold","label"="RecurringServices\n","fontname"="sans-serif"]
+"RegionalOperations" ["margin"="0.3","orientation"="147","shape"="egg","fontsize"="16","style"="bold","label"="RegionalOperations\n","fontname"="sans-serif"]
+"ProviderMatching" ["margin"="0.3","orientation"="272","shape"="egg","fontsize"="16","style"="bold","label"="ProviderMatching\n","fontname"="sans-serif"]
 }
 subgraph "cluster_Teams_Subgraph" {
 graph ["imagepath"="C:\Users\danie\AppData\Local\Temp\GraphvizJava","color"="white"]
-"RecurringServicesTeam" ["margin"="0.3","orientation"="111","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>RecurringServicesTeam</td></tr></table>>,"fontname"="sans-serif"]
-"ClaimsTeam" ["margin"="0.3","orientation"="89","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>ClaimsTeam</td></tr></table>>,"fontname"="sans-serif"]
-"ServiceProvidersTeam" ["margin"="0.3","orientation"="269","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>ServiceProvidersTeam</td></tr></table>>,"fontname"="sans-serif"]
-"QualityAndDisputesTeam" ["margin"="0.3","orientation"="118","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>QualityAndDisputesTeam</td></tr></table>>,"fontname"="sans-serif"]
-"RegionalExpansionTeam" ["margin"="0.3","orientation"="235","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>RegionalExpansionTeam</td></tr></table>>,"fontname"="sans-serif"]
-"FintechTeam" ["margin"="0.3","orientation"="189","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>FintechTeam</td></tr></table>>,"fontname"="sans-serif"]
-"WorkManagementTeam" ["margin"="0.3","orientation"="99","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>WorkManagementTeam</td></tr></table>>,"fontname"="sans-serif"]
-"MarketplaceTeam" ["margin"="0.3","orientation"="232","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>MarketplaceTeam</td></tr></table>>,"fontname"="sans-serif"]
+"MarketplaceTeam" ["margin"="0.3","orientation"="228","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>MarketplaceTeam</td></tr></table>>,"fontname"="sans-serif"]
+"RecurringServicesTeam" ["margin"="0.3","orientation"="343","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>RecurringServicesTeam</td></tr></table>>,"fontname"="sans-serif"]
+"WorkManagementTeam" ["margin"="0.3","orientation"="148","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>WorkManagementTeam</td></tr></table>>,"fontname"="sans-serif"]
+"FintechTeam" ["margin"="0.3","orientation"="28","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>FintechTeam</td></tr></table>>,"fontname"="sans-serif"]
+"QualityAndDisputesTeam" ["margin"="0.3","orientation"="325","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>QualityAndDisputesTeam</td></tr></table>>,"fontname"="sans-serif"]
+"ClaimsTeam" ["margin"="0.3","orientation"="240","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>ClaimsTeam</td></tr></table>>,"fontname"="sans-serif"]
+"ServiceProvidersTeam" ["margin"="0.3","orientation"="64","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>ServiceProvidersTeam</td></tr></table>>,"fontname"="sans-serif"]
+"RegionalExpansionTeam" ["margin"="0.3","orientation"="263","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>RegionalExpansionTeam</td></tr></table>>,"fontname"="sans-serif"]
+"MarketplaceTeam" -> "RecurringServicesTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">D</td></tr>
+</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">U</td></tr>
+</table>>,"style"="bold","label"="Customer/Supplier","dir"="none","fontname"="sans-serif"]
+"MarketplaceTeam" -> "WorkManagementTeam" ["fontsize"="12","style"="bold","label"="Partnership","dir"="none","fontname"="sans-serif"]
+"WorkManagementTeam" -> "FintechTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">D</td></tr>
+</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">U</td></tr>
+</table>>,"style"="bold","label"="                                                                                ","dir"="none","fontname"="sans-serif"]
+"WorkManagementTeam" -> "QualityAndDisputesTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">D</td></tr>
+</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">U</td></tr>
+</table>>,"style"="bold","label"="                                                                                ","dir"="none","fontname"="sans-serif"]
+"WorkManagementTeam" -> "RecurringServicesTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">D</td></tr>
+</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">U</td></tr>
+</table>>,"style"="bold","label"="                                                                                ","dir"="none","fontname"="sans-serif"]
+"FintechTeam" -> "RecurringServicesTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">D</td></tr>
+</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">U</td></tr>
+</table>>,"style"="bold","label"="Customer/Supplier","dir"="none","fontname"="sans-serif"]
+"ClaimsTeam" -> "WorkManagementTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">D</td></tr>
+</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">U</td></tr>
+</table>>,"style"="bold","label"="                                                                                ","dir"="none","fontname"="sans-serif"]
+"ServiceProvidersTeam" -> "MarketplaceTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">D</td></tr>
+</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">U</td></tr>
+</table>>,"style"="bold","label"="Customer/Supplier","dir"="none","fontname"="sans-serif"]
+"ServiceProvidersTeam" -> "RecurringServicesTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">D</td></tr>
+</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">U</td></tr>
+</table>>,"style"="bold","label"="                                                                                ","dir"="none","fontname"="sans-serif"]
+"RegionalExpansionTeam" -> "MarketplaceTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">D</td></tr>
+</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">U</td></tr>
+</table>>,"style"="bold","label"="                                                                                ","dir"="none","fontname"="sans-serif"]
+"RegionalExpansionTeam" -> "FintechTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">D</td></tr>
+</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">U</td></tr>
+</table>>,"style"="bold","label"="                                                                                ","dir"="none","fontname"="sans-serif"]
+"RegionalExpansionTeam" -> "ServiceProvidersTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">D</td></tr>
+</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">U</td></tr>
+</table>>,"style"="bold","label"="                                                                                ","dir"="none","fontname"="sans-serif"]
+"RegionalExpansionTeam" -> "ClaimsTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">D</td></tr>
+</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+<tr><td bgcolor="white">U</td></tr>
+</table>>,"style"="bold","label"="                                                                                ","dir"="none","fontname"="sans-serif"]
 }
 "QualityAndDisputesTeam" -> "QualityAndDisputes" ["color"="#686868","fontsize"="12","fontcolor"="#686868","style"="dashed","label"="  \"realizes\"\n","fontname"="sans-serif"]
 "MarketplaceTeam" -> "ProviderMatching" ["color"="#686868","fontsize"="12","fontcolor"="#686868","style"="dashed","label"="  \"realizes\"\n","fontname"="sans-serif"]

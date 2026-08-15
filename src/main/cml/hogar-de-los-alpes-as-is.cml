@@ -39,7 +39,12 @@ ContextMap HogarDeLosAlpesAsIsContextMap {
      */
 }
 
-BoundedContext HogarDeLosAlpesMonolith implements WorkOrchestrationSD, ProviderTrustAndAccreditationSD, ProviderMatchingSD, ProviderRegistrationSD, JobDiagnosisAndIntakeSD, QuotationManagementSD, PartnerIntegrationSD, PartnerRulesAndComplianceSD, ExecutionTrackingSD, QualityDisputesAndWarrantiesSD, ProviderReputationSD, EvidenceManagementSD, PartnerBillingSD, PaymentProcessingSD, RegionalOperationsSD, LocalizationSD {
+/*
+ * El AS-IS representa la operacion actual en Colombia. RegionalOperationsSD y
+ * LocalizationSD no se incluyen porque fueron disenados para soportar la
+ * futura expansion a Mexico, Brasil y Argentina (ver TO-BE).
+ */
+BoundedContext HogarDeLosAlpesMonolith implements WorkOrchestrationSD, ProviderTrustAndAccreditationSD, ProviderMatchingSD, ProviderRegistrationSD, JobDiagnosisAndIntakeSD, QuotationManagementSD, PartnerIntegrationSD, PartnerRulesAndComplianceSD, ExecutionTrackingSD, QualityDisputesAndWarrantiesSD, ProviderReputationSD, EvidenceManagementSD, PartnerBillingSD, PaymentProcessingSD {
     type = APPLICATION
     domainVisionStatement = "Aplicacion monolitica que concentra actualmente las capacidades de marketplace, proveedores, acreditacion, trabajos, cotizaciones, siniestros, integraciones B2B2C, pagos y gestion operativa de Hogar de los Alpes."
     responsibilities = "Marketplace y publicacion de servicios", "Registro y acreditacion de proveedores", "Diagnostico y gestion de trabajos", "Cotizaciones", "Siniestros e integraciones B2B2C", "Reglas y compliance de partners", "Pagos", "Calidad, disputas y garantias", "Gestion operativa regional"

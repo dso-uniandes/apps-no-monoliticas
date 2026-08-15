@@ -90,20 +90,21 @@ ContextMap HogarDeLosAlpesToBeContextMap {
     Quotations [P] <-> [P] WorkOrchestration
 
     /*
-     * PartnerIntegration publica los trabajos originados por partners ya
-     * traducidos y priorizados en un lenguaje interno unico (OHS/PL); la
+     * PartnerIntegration entrega los trabajos originados por partners ya
+     * traducidos y priorizados en un lenguaje interno estable (PL); la
      * orquestacion los consume sin conocer los modelos particulares de cada
-     * partner. No es Conformist: el lenguaje publicado es interno y se
-     * disena junto con sus consumidores.
+     * partner. La orquestacion es su unico consumidor, por lo que no se
+     * modela como Open Host Service.
      */
-    PartnerIntegration [U,OHS,PL] -> [D] WorkOrchestration
+    PartnerIntegration [U,PL] -> [D] WorkOrchestration
 
     /*
-     * Las reglas, SLAs y compliance de cada partner se exponen como servicio
-     * de evaluacion (OHS/PL) para que no queden dispersas dentro de la
-     * orquestacion.
+     * Las reglas, SLAs y compliance de cada partner se entregan como
+     * resultados de evaluacion en un lenguaje estable (PL) para que no queden
+     * dispersas dentro de la orquestacion, su unico consumidor; no se
+     * requiere una interfaz publica reutilizable (OHS).
      */
-    PartnerRules [U,OHS,PL] -> [D] WorkOrchestration
+    PartnerRules [U,PL] -> [D] WorkOrchestration
 
     /*
      * La orquestacion publica los eventos del ciclo de vida del trabajo;
@@ -129,11 +130,11 @@ ContextMap HogarDeLosAlpesToBeContextMap {
     Payments [U,OHS,PL] -> [D,ACL] ProviderWallet
 
     /*
-     * El scoring publica puntajes y niveles de riesgo como lenguaje estable
-     * (OHS/PL) disenado para sus consumidores; el prestamo los usa para
-     * originar creditos. Mismo equipo fintech, sin conformismo impuesto.
+     * El scoring entrega puntajes y niveles de riesgo como lenguaje estable
+     * (PL); MicroLending es hoy su unico consumidor y ambos pertenecen al
+     * mismo equipo fintech, por lo que no se justifica un Open Host Service.
      */
-    CreditScoring [U,OHS,PL] -> [D] MicroLending
+    CreditScoring [U,PL] -> [D] MicroLending
 
     /*
      * Los desembolsos y cobros de prestamos se ejecutan sobre la wallet; las
