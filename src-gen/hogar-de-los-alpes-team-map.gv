@@ -1,5 +1,12 @@
 digraph "ContextMapGraph" {
-graph ["imagepath"="C:\Users\danie\AppData\Local\Temp\GraphvizJava"]
+nodesep=1.4
+ranksep=2.0
+pad=1.0
+overlap=false
+sep="+30"
+forcelabels=true
+
+graph ["imagepath"="C:/Users/danie/OneDrive/Documents/RepoAppsNoMonoliticas/src-gen"]
 "QualityAndDisputesTeam" ["margin"="0.3","orientation"="347","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>QualityAndDisputesTeam</td></tr></table>>,"fontname"="sans-serif"]
 "QualityAndDisputes" ["margin"="0.3","orientation"="294","shape"="egg","fontsize"="16","style"="bold","label"="QualityAndDisputes\n","fontname"="sans-serif"]
 "MarketplaceTeam" ["margin"="0.3","orientation"="21","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>MarketplaceTeam</td></tr></table>>,"fontname"="sans-serif"]
@@ -23,8 +30,8 @@ graph ["imagepath"="C:\Users\danie\AppData\Local\Temp\GraphvizJava"]
 "ClaimsTeam" ["margin"="0.3","orientation"="77","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>ClaimsTeam</td></tr></table>>,"fontname"="sans-serif"]
 "PartnerIntegration" ["margin"="0.3","orientation"="66","shape"="egg","fontsize"="16","style"="bold","label"="PartnerIntegration\n","fontname"="sans-serif"]
 "PartnerRules" ["margin"="0.3","orientation"="111","shape"="egg","fontsize"="16","style"="bold","label"="PartnerRules\n","fontname"="sans-serif"]
-subgraph "cluster_GenericSubgraph" {
-graph ["imagepath"="C:\Users\danie\AppData\Local\Temp\GraphvizJava","color"="white"]
+subgraph "GenericSubgraph" {
+graph ["imagepath"="C:/Users/danie/OneDrive/Documents/RepoAppsNoMonoliticas/src-gen","color"="white"]
 "ProviderWallet" ["margin"="0.3","orientation"="19","shape"="egg","fontsize"="16","style"="bold","label"="ProviderWallet\n","fontname"="sans-serif"]
 "QualityAndDisputes" ["margin"="0.3","orientation"="340","shape"="egg","fontsize"="16","style"="bold","label"="QualityAndDisputes\n","fontname"="sans-serif"]
 "RecurringServices" ["margin"="0.3","orientation"="78","shape"="egg","fontsize"="16","style"="bold","label"="RecurringServices\n","fontname"="sans-serif"]
@@ -41,8 +48,8 @@ graph ["imagepath"="C:\Users\danie\AppData\Local\Temp\GraphvizJava","color"="whi
 "ProviderAccreditation" ["margin"="0.3","orientation"="298","shape"="egg","fontsize"="16","style"="bold","label"="ProviderAccreditation\n","fontname"="sans-serif"]
 "PartnerRules" ["margin"="0.3","orientation"="44","shape"="egg","fontsize"="16","style"="bold","label"="PartnerRules\n","fontname"="sans-serif"]
 }
-subgraph "cluster_Teams_Subgraph" {
-graph ["imagepath"="C:\Users\danie\AppData\Local\Temp\GraphvizJava","color"="white"]
+subgraph "Teams_Subgraph" {
+graph ["imagepath"="C:/Users/danie/OneDrive/Documents/RepoAppsNoMonoliticas/src-gen","color"="white"]
 "FintechTeam" ["margin"="0.3","orientation"="180","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>FintechTeam</td></tr></table>>,"fontname"="sans-serif"]
 "RecurringServicesTeam" ["margin"="0.3","orientation"="229","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>RecurringServicesTeam</td></tr></table>>,"fontname"="sans-serif"]
 "RegionalExpansionTeam" ["margin"="0.3","orientation"="318","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>RegionalExpansionTeam</td></tr></table>>,"fontname"="sans-serif"]
@@ -53,65 +60,65 @@ graph ["imagepath"="C:\Users\danie\AppData\Local\Temp\GraphvizJava","color"="whi
 "ClaimsTeam" ["margin"="0.3","orientation"="232","shape"="egg","fontsize"="16","style"="bold","label"=<<table cellspacing="0" cellborder="0" border="0"><tr><td rowspan="2"><img src='team-icon.png' /></td><td width="10px"></td><td><b>Team</b></td></tr><tr><td width="10px"></td><td>ClaimsTeam</td></tr></table>>,"fontname"="sans-serif"]
 "FintechTeam" -> "RecurringServicesTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">D</td></tr>
-</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+</table>>,"labeldistance"="3.5","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">U</td></tr>
-</table>>,"style"="bold","label"="Customer/Supplier","dir"="none","fontname"="sans-serif"]
+</table>>,"style"="bold","label"="Customer/Supplier","dir"="none","fontname"="sans-serif","minlen"="2"]
 "RegionalExpansionTeam" -> "MarketplaceTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">D</td></tr>
-</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+</table>>,"labeldistance"="3.5","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">U</td></tr>
-</table>>,"style"="bold","label"="                                                                ","dir"="none","fontname"="sans-serif"]
+</table>>,"style"="bold","label"="                                                                ","dir"="none","fontname"="sans-serif","minlen"="2"]
 "RegionalExpansionTeam" -> "FintechTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">D</td></tr>
-</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+</table>>,"labeldistance"="3.5","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">U</td></tr>
-</table>>,"style"="bold","label"="                                                                ","dir"="none","fontname"="sans-serif"]
+</table>>,"style"="bold","label"="                                                                ","dir"="none","fontname"="sans-serif","minlen"="2"]
 "RegionalExpansionTeam" -> "ServiceProvidersTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">D</td></tr>
-</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+</table>>,"labeldistance"="3.5","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">U</td></tr>
-</table>>,"style"="bold","label"="                                                                ","dir"="none","fontname"="sans-serif"]
+</table>>,"style"="bold","label"="                                                                ","dir"="none","fontname"="sans-serif","minlen"="2"]
 "RegionalExpansionTeam" -> "ClaimsTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">D</td></tr>
-</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+</table>>,"labeldistance"="3.5","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">U</td></tr>
-</table>>,"style"="bold","label"="                                                                ","dir"="none","fontname"="sans-serif"]
+</table>>,"style"="bold","label"="                                                                ","dir"="none","fontname"="sans-serif","minlen"="2"]
 "MarketplaceTeam" -> "RecurringServicesTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">D</td></tr>
-</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+</table>>,"labeldistance"="3.5","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">U</td></tr>
-</table>>,"style"="bold","label"="Customer/Supplier","dir"="none","fontname"="sans-serif"]
-"MarketplaceTeam" -> "WorkManagementTeam" ["fontsize"="12","style"="bold","label"="Partnership","dir"="none","fontname"="sans-serif"]
+</table>>,"style"="bold","label"="Customer/Supplier","dir"="none","fontname"="sans-serif","minlen"="2"]
+"MarketplaceTeam" -> "WorkManagementTeam" ["fontsize"="12","style"="bold","label"="Partnership","dir"="none","fontname"="sans-serif","minlen"="2"]
 "WorkManagementTeam" -> "FintechTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">D</td></tr>
-</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+</table>>,"labeldistance"="3.5","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">U</td></tr>
-</table>>,"style"="bold","label"="                                                                ","dir"="none","fontname"="sans-serif"]
+</table>>,"style"="bold","label"="                                                                ","dir"="none","fontname"="sans-serif","minlen"="2"]
 "WorkManagementTeam" -> "QualityAndDisputesTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">D</td></tr>
-</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+</table>>,"labeldistance"="3.5","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">U</td></tr>
-</table>>,"style"="bold","label"="                                                                ","dir"="none","fontname"="sans-serif"]
+</table>>,"style"="bold","label"="                                                                ","dir"="none","fontname"="sans-serif","minlen"="2"]
 "WorkManagementTeam" -> "RecurringServicesTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">D</td></tr>
-</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+</table>>,"labeldistance"="3.5","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">U</td></tr>
-</table>>,"style"="bold","label"="                                                                ","dir"="none","fontname"="sans-serif"]
+</table>>,"style"="bold","label"="                                                                ","dir"="none","fontname"="sans-serif","minlen"="2"]
 "ServiceProvidersTeam" -> "MarketplaceTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">D</td></tr>
-</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+</table>>,"labeldistance"="3.5","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">U</td></tr>
-</table>>,"style"="bold","label"="Customer/Supplier","dir"="none","fontname"="sans-serif"]
+</table>>,"style"="bold","label"="Customer/Supplier","dir"="none","fontname"="sans-serif","minlen"="2"]
 "ServiceProvidersTeam" -> "RecurringServicesTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">D</td></tr>
-</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+</table>>,"labeldistance"="3.5","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">U</td></tr>
-</table>>,"style"="bold","label"="                                                                ","dir"="none","fontname"="sans-serif"]
+</table>>,"style"="bold","label"="                                                                ","dir"="none","fontname"="sans-serif","minlen"="2"]
 "ClaimsTeam" -> "WorkManagementTeam" ["headlabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">D</td></tr>
-</table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
+</table>>,"labeldistance"="3.5","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
 <tr><td bgcolor="white">U</td></tr>
-</table>>,"style"="bold","label"="                                                                ","dir"="none","fontname"="sans-serif"]
+</table>>,"style"="bold","label"="                                                                ","dir"="none","fontname"="sans-serif","minlen"="2"]
 }
 "QualityAndDisputesTeam" -> "QualityAndDisputes" ["color"="#686868","fontsize"="12","fontcolor"="#686868","style"="dashed","label"="  \"realizes\"\n","fontname"="sans-serif"]
 "MarketplaceTeam" -> "ProviderMatching" ["color"="#686868","fontsize"="12","fontcolor"="#686868","style"="dashed","label"="  \"realizes\"\n","fontname"="sans-serif"]
@@ -128,4 +135,51 @@ graph ["imagepath"="C:\Users\danie\AppData\Local\Temp\GraphvizJava","color"="whi
 "RecurringServicesTeam" -> "RecurringServices" ["color"="#686868","fontsize"="12","fontcolor"="#686868","style"="dashed","label"="  \"realizes\"\n","fontname"="sans-serif"]
 "ClaimsTeam" -> "PartnerRules" ["color"="#686868","fontsize"="12","fontcolor"="#686868","style"="dashed","label"="  \"realizes\"\n","fontname"="sans-serif"]
 "ClaimsTeam" -> "PartnerIntegration" ["color"="#686868","fontsize"="12","fontcolor"="#686868","style"="dashed","label"="  \"realizes\"\n","fontname"="sans-serif"]
+subgraph "cluster_QualityAndDisputesTeam" {
+graph ["style"="rounded,dashed","color"="gray55","margin"="28","pencolor"="gray55"]
+"QualityAndDisputesTeam"
+"QualityAndDisputes"
+}
+subgraph "cluster_MarketplaceTeam" {
+graph ["style"="rounded,dashed","color"="gray55","margin"="28","pencolor"="gray55"]
+"MarketplaceTeam"
+"ProviderMatching"
+"MarketplaceIntake"
+}
+subgraph "cluster_ServiceProvidersTeam" {
+graph ["style"="rounded,dashed","color"="gray55","margin"="28","pencolor"="gray55"]
+"ServiceProvidersTeam"
+"ProviderAccreditation"
+"ProviderRegistry"
+}
+subgraph "cluster_RegionalExpansionTeam" {
+graph ["style"="rounded,dashed","color"="gray55","margin"="28","pencolor"="gray55"]
+"RegionalExpansionTeam"
+"RegionalOperations"
+}
+subgraph "cluster_FintechTeam" {
+graph ["style"="rounded,dashed","color"="gray55","margin"="28","pencolor"="gray55"]
+"FintechTeam"
+"MicroLending"
+"CreditScoring"
+"ProviderWallet"
+"Payments"
+}
+subgraph "cluster_WorkManagementTeam" {
+graph ["style"="rounded,dashed","color"="gray55","margin"="28","pencolor"="gray55"]
+"WorkManagementTeam"
+"Quotations"
+"WorkOrchestration"
+}
+subgraph "cluster_RecurringServicesTeam" {
+graph ["style"="rounded,dashed","color"="gray55","margin"="28","pencolor"="gray55"]
+"RecurringServicesTeam"
+"RecurringServices"
+}
+subgraph "cluster_ClaimsTeam" {
+graph ["style"="rounded,dashed","color"="gray55","margin"="28","pencolor"="gray55"]
+"ClaimsTeam"
+"PartnerRules"
+"PartnerIntegration"
+}
 }

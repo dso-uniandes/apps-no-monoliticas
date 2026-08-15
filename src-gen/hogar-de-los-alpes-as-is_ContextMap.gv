@@ -1,8 +1,8 @@
 digraph "ContextMapGraph" {
 graph ["imagepath"="C:\Users\danie\AppData\Local\Temp\GraphvizJava"]
-"B2B2CPartners" ["margin"="0.3","orientation"="208","shape"="egg","fontsize"="16","style"="bold","label"="B2B2CPartners\n","fontname"="sans-serif"]
-"HogarDeLosAlpesMonolith" ["margin"="0.3","orientation"="118","shape"="egg","fontsize"="16","style"="bold","label"="HogarDeLosAlpesMonolith\n","fontname"="sans-serif"]
-"VerificationAuthorities" ["margin"="0.3","orientation"="28","shape"="egg","fontsize"="16","style"="bold","label"="VerificationAuthorities\n","fontname"="sans-serif"]
+"B2B2CPartners" ["margin"="0.3","orientation"="84","shape"="egg","fontsize"="16","style"="bold","label"="B2B2CPartners\n","fontname"="sans-serif"]
+"HogarDeLosAlpesMonolith" ["margin"="0.3","orientation"="254","shape"="egg","fontsize"="16","style"="bold","label"="HogarDeLosAlpesMonolith\n","fontname"="sans-serif"]
+"VerificationAuthorities" ["margin"="0.3","orientation"="117","shape"="egg","fontsize"="16","style"="bold","label"="VerificationAuthorities\n","fontname"="sans-serif"]
 "B2B2CPartners" -> "HogarDeLosAlpesMonolith" ["headlabel"=<<table cellspacing="0" cellborder="1" border="0">
 <tr><td bgcolor="white" sides="r">D</td><td sides="trbl" bgcolor="white"><font>CF</font></td></tr>
 </table>>,"labeldistance"="0","fontsize"="12","taillabel"=<<table cellspacing="0" cellborder="0" border="0">
