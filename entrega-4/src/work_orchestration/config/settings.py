@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-from typing import Any
+from typing import Any, Literal
 
 
 class Settings(BaseSettings):
@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     PULSAR_URL: str = 'pulsar://localhost:6650'
     MESSAGING_ENABLED: bool = False
     WORK_CREATED_TOPIC: str = 'persistent://public/default/hda-work-created-v1'
+    PERSISTENCE_BACKEND: Literal['inmemory', 'postgres'] = 'inmemory'
+    DATABASE_URL: str = 'postgresql+psycopg://hda:hda@localhost:5432/hda'
+    AUTO_CREATE_SCHEMA: bool = True
 
 
 settings = Settings()

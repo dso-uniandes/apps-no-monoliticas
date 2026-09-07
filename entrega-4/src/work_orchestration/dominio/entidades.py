@@ -50,3 +50,26 @@ class Work(AgregacionRaiz):
             )
         )
         return work
+
+    @classmethod
+    def rehydrate(
+        cls,
+        id: uuid.UUID,
+        partner_id: str,
+        external_reference: str,
+        status: str,
+        city: str,
+        country: str,
+        created_at: datetime,
+    ) -> 'Work':
+        """Reconstruye el agregado desde persistencia sin emitir eventos de dominio."""
+        return cls(
+            id=id,
+            partner_id=PartnerId(partner_id),
+            external_reference=ExternalReference(external_reference),
+            status=WorkStatus(status),
+            location=Location(city=city, country=country),
+            fecha_creacion=created_at,
+            fecha_actualizacion=created_at,
+            eventos=[],
+        )

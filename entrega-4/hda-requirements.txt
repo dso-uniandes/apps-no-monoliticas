@@ -3,3 +3,5 @@ uvicorn[standard]==0.35.0
 pydantic-settings==2.10.1
 pulsar-client==3.7.0
 pulsar-client[avro]==3.7.0
+SQLAlchemy==2.0.41
+psycopg[binary]==3.2.9
