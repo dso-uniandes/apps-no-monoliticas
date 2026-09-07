@@ -1,17 +1,42 @@
 networks:
-  pulsar:
+  hda:
     driver: bridge
+
+volumes:
+  postgres_data:
+  zookeeper_data:
+  bookkeeper_data:
+
 services:
-# Start zookeeper
-  zookeeper:
-    image: apachepulsar/pulsar:latest
-    profiles: ["pulsar"]
-    container_name: zookeeper
+  postgres:
+    image: postgres:16
+    container_name: hda-postgres
     restart: on-failure
     networks:
-      - pulsar
+      - hda
+    environment:
+      POSTGRES_DB: hda
+      POSTGRES_USER: hda
+      POSTGRES_PASSWORD: hda
+    ports:
+      - "5432:5432"
     volumes:
-      - ./data/zookeeper:/pulsar/data/zookeeper
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hda -d hda"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  zookeeper:
+    image: apachepulsar/pulsar:latest
+    container_name: zookeeper
+    restart: on-failure
+    user: "0"
+    networks:
+      - hda
+    volumes:
+      - zookeeper_data:/pulsar/data/zookeeper
     environment:
       - metadataStoreUrl=zk:zookeeper:2181
     command: >
@@ -24,27 +49,30 @@ services:
       timeout: 5s
       retries: 30
 
-# Init cluster metadata
   pulsar-init:
+    image: apachepulsar/pulsar:latest
     container_name: pulsar-init
     hostname: pulsar-init
-    image: apachepulsar/pulsar:latest
-    profiles: ["pulsar"]
     networks:
-      - pulsar
-    command: bin/pulsar initialize-cluster-metadata --cluster cluster-a --zookeeper zookeeper:2181 --configuration-store zookeeper:2181 --web-service-url http://broker:8080 --broker-service-url pulsar://broker:6650
+      - hda
+    command: >
+      bin/pulsar initialize-cluster-metadata
+      --cluster cluster-a
+      --zookeeper zookeeper:2181
+      --configuration-store zookeeper:2181
+      --web-service-url http://broker:8080
+      --broker-service-url pulsar://broker:6650
     depends_on:
       zookeeper:
         condition: service_healthy
 
-# Start bookie
   bookie:
     image: apachepulsar/pulsar:latest
-    profiles: ["pulsar"]
     container_name: bookie
     restart: on-failure
+    user: "0"
     networks:
-      - pulsar
+      - hda
     environment:
       - clusterName=cluster-a
       - zkServers=zookeeper:2181
@@ -54,21 +82,20 @@ services:
         condition: service_healthy
       pulsar-init:
         condition: service_completed_successfully
-  # Map the local directory to the container to avoid bookie startup failure due to insufficient container disks.
     volumes:
-      - ./data/bookkeeper:/pulsar/data/bookkeeper
-    command: bash -c "bin/apply-config-from-env.py conf/bookkeeper.conf
+      - bookkeeper_data:/pulsar/data/bookkeeper
+    command: >
+      bash -c "bin/apply-config-from-env.py conf/bookkeeper.conf
       && exec bin/pulsar bookie"
 
-# Start broker
   broker:
     image: apachepulsar/pulsar:latest
-    profiles: ["pulsar"]
     container_name: broker
     hostname: broker
     restart: on-failure
+    user: "0"
     networks:
-      - pulsar
+      - hda
     environment:
       - metadataStoreUrl=zk:zookeeper:2181
       - zookeeperServers=zookeeper:2181
@@ -77,7 +104,7 @@ services:
       - managedLedgerDefaultWriteQuorum=1
       - managedLedgerDefaultAckQuorum=1
       - advertisedAddress=broker
-      - advertisedListeners=external:pulsar://127.0.0.1:6650
+      - advertisedListeners=internal:pulsar://broker:6650,external:pulsar://127.0.0.1:6650
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -86,5 +113,80 @@ services:
     ports:
       - "6650:6650"
       - "8080:8080"
-    command: bash -c "bin/apply-config-from-env.py conf/broker.conf
-      &&  exec bin/pulsar broker"
+    command: >
+      bash -c "bin/apply-config-from-env.py conf/broker.conf
+      && exec bin/pulsar broker"
+    healthcheck:
+      test: ["CMD", "bin/pulsar-admin", "brokers", "healthcheck"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 40s
+
+  partner-integration:
+    build:
+      context: .
+      dockerfile: partner-integration.Dockerfile
+    container_name: partner-integration
+    restart: on-failure
+    networks:
+      - hda
+    environment:
+      MESSAGING_ENABLED: "false"
+    ports:
+      - "8001:8000"
+
+  partner-rules:
+    build:
+      context: .
+      dockerfile: partner-rules.Dockerfile
+    container_name: partner-rules
+    restart: on-failure
+    networks:
+      - hda
+    environment:
+      MESSAGING_ENABLED: "false"
+    ports:
+      - "8002:8000"
+
+  work-orchestration:
+    build:
+      context: .
+      dockerfile: work-orchestration.Dockerfile
+    container_name: work-orchestration
+    restart: on-failure
+    networks:
+      - hda
+    environment:
+      PERSISTENCE_BACKEND: postgres
+      DATABASE_URL: postgresql+psycopg://hda:hda@postgres:5432/hda
+      AUTO_CREATE_SCHEMA: "true"
+      MESSAGING_ENABLED: "true"
+      PULSAR_URL: pulsar://broker:6650
+      WORK_CREATED_TOPIC: persistent://public/default/hda-work-created-v1
+    ports:
+      - "8003:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      broker:
+        condition: service_healthy
+
+  provider-matching:
+    build:
+      context: .
+      dockerfile: provider-matching.Dockerfile
+    container_name: provider-matching
+    restart: on-failure
+    networks:
+      - hda
+    environment:
+      MESSAGING_ENABLED: "true"
+      PULSAR_URL: pulsar://broker:6650
+      WORK_CREATED_TOPIC: persistent://public/default/hda-work-created-v1
+      WORK_CREATED_SUBSCRIPTION: hda-provider-matching-v1
+    ports:
+      - "8004:8000"
+    depends_on:
+      broker:
+        condition: service_healthy

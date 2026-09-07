@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -11,6 +12,8 @@ from work_orchestration.config.container import (
     shutdown_persistence,
 )
 from work_orchestration.config.settings import app_configs
+
+logging.basicConfig(level=logging.INFO)
 
 
 @asynccontextmanager

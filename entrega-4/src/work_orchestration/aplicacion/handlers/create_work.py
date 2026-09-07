@@ -1,4 +1,5 @@
 from seedwork.aplicacion.comandos import ComandoHandler
+import logging
 
 from work_orchestration.aplicacion.comandos.create_work import CreateWork
 from work_orchestration.aplicacion.mappers.work_created_integration_mapper import (
@@ -8,6 +9,9 @@ from work_orchestration.aplicacion.puertos.event_publisher import EventPublisher
 from work_orchestration.dominio.entidades import Work
 from work_orchestration.dominio.eventos import WorkCreated
 from work_orchestration.dominio.repositorios import WorkRepository
+
+
+logger = logging.getLogger(__name__)
 
 
 class CreateWorkHandler(ComandoHandler):
@@ -27,6 +31,7 @@ class CreateWorkHandler(ComandoHandler):
             country=comando.country,
         )
         self._repositorio.agregar(work)
+        logger.info('Work persisted: %s', work.id)
 
         for evento in work.eventos:
             if isinstance(evento, WorkCreated):

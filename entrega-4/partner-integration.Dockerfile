@@ -1,13 +1,16 @@
-FROM python:3.12
+FROM python:3.12-slim
 
-EXPOSE 8000/tcp
+WORKDIR /app
 
-COPY hda-requirements.txt ./
-RUN pip install --upgrade --no-cache-dir pip setuptools wheel
-RUN pip install --no-cache-dir -r hda-requirements.txt
+COPY hda-requirements.txt .
+RUN pip install --upgrade --no-cache-dir pip setuptools wheel \
+    && pip install --no-cache-dir -r hda-requirements.txt
 
-COPY . .
+COPY src/seedwork ./seedwork
+COPY src/partner_integration ./partner_integration
 
-WORKDIR "/src"
+ENV PYTHONPATH=/app
 
-CMD [ "uvicorn", "partner_integration.main:app", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE 8000
+
+CMD ["uvicorn", "partner_integration.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -55,7 +55,7 @@ class WorkCreatedConsumer:
 
     def _run(self) -> None:
         try:
-            self._client = pulsar.Client(self._pulsar_url)
+            self._client = pulsar.Client(self._pulsar_url, listener_name='internal')
             self._consumer = self._client.subscribe(
                 self._topic,
                 self._subscription,
@@ -71,8 +71,10 @@ class WorkCreatedConsumer:
 
                 try:
                     evento: WorkCreatedV1 = msg.value()
+                    logger.info('WorkCreatedV1 received: %s', evento.work_id)
                     comando = ProcessMatching(work_id=evento.work_id)
-                    self._handler.handle(comando)
+                    matching = self._handler.handle(comando)
+                    logger.info('Matching processed: %s', matching.id)
                     self._consumer.acknowledge(msg)
                 except Exception:
                     logger.exception('Error procesando WorkCreatedV1')

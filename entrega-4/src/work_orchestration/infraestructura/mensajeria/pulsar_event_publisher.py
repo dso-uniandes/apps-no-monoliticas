@@ -14,7 +14,7 @@ class PulsarEventPublisher(EventPublisher):
     def __init__(self, pulsar_url: str, topic: str):
         self._pulsar_url = pulsar_url
         self._topic = topic
-        self._client = pulsar.Client(pulsar_url)
+        self._client = pulsar.Client(pulsar_url, listener_name='internal')
         self._producer = self._client.create_producer(
             topic,
             schema=AvroSchema(WorkCreatedV1),
@@ -30,7 +30,7 @@ class PulsarEventPublisher(EventPublisher):
             evento,
             partition_key=evento.work_id or '',
         )
-        logger.info('WorkCreatedV1 publicado en %s key=%s', self._topic, evento.work_id)
+        logger.info('WorkCreatedV1 published: %s', evento.work_id)
 
     def close(self) -> None:
         try:
