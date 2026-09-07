@@ -11,10 +11,13 @@ logger = logging.getLogger(__name__)
 
 
 class PulsarEventPublisher(EventPublisher):
-    def __init__(self, pulsar_url: str, topic: str):
+    def __init__(self, pulsar_url: str, topic: str, listener_name: str | None = None):
         self._pulsar_url = pulsar_url
         self._topic = topic
-        self._client = pulsar.Client(pulsar_url, listener_name='internal')
+        client_kwargs = {}
+        if listener_name:
+            client_kwargs['listener_name'] = listener_name
+        self._client = pulsar.Client(pulsar_url, **client_kwargs)
         self._producer = self._client.create_producer(
             topic,
             schema=AvroSchema(WorkCreatedV1),

@@ -18,9 +18,11 @@ def _build_event_publisher() -> EventPublisher:
             PulsarEventPublisher,
         )
 
+        listener_name = settings.PULSAR_LISTENER_NAME.strip() or None
         return PulsarEventPublisher(
             pulsar_url=settings.PULSAR_URL,
             topic=settings.WORK_CREATED_TOPIC,
+            listener_name=listener_name,
         )
     return NoOpEventPublisher()
 

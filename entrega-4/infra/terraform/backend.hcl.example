@@ -1,0 +1,2 @@
+bucket = "YOUR_GCP_PROJECT_ID-hda-tfstate"
+prefix = "hda-poc"

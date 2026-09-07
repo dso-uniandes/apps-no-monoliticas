@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: provider-matching
+  namespace: hda
+  labels:
+    app: provider-matching
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: provider-matching
+  template:
+    metadata:
+      labels:
+        app: provider-matching
+    spec:
+      containers:
+        - name: provider-matching
+          image: __ARTIFACT_REGISTRY__/provider-matching:__IMAGE_TAG__
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+              name: http
+          env:
+            - name: MESSAGING_ENABLED
+              value: "true"
+            - name: PULSAR_URL
+              value: pulsar://pulsar:6650
+            - name: WORK_CREATED_TOPIC
+              value: persistent://public/default/hda-work-created-v1
+            - name: WORK_CREATED_SUBSCRIPTION
+              value: hda-provider-matching-v1
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: provider-matching
+  namespace: hda
+spec:
+  type: ClusterIP
+  selector:
+    app: provider-matching
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000

@@ -118,4 +118,13 @@ dmypy.json
 *.tfstate
 *.tfstate.*
 .terraform/
-.terraform.lock.hcl
+*.tfvars
+!*.tfvars.example
+backend.hcl
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.image-tag
+.deploy-render/

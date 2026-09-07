@@ -27,11 +27,13 @@ def get_work_created_consumer():
             WorkCreatedConsumer,
         )
 
+        listener_name = settings.PULSAR_LISTENER_NAME.strip() or None
         _work_created_consumer = WorkCreatedConsumer(
             pulsar_url=settings.PULSAR_URL,
             topic=settings.WORK_CREATED_TOPIC,
             subscription=settings.WORK_CREATED_SUBSCRIPTION,
             process_matching_handler=get_process_matching_handler(),
+            listener_name=listener_name,
         )
     return _work_created_consumer
 

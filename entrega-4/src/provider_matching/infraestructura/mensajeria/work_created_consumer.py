@@ -20,11 +20,13 @@ class WorkCreatedConsumer:
         topic: str,
         subscription: str,
         process_matching_handler: ProcessMatchingHandler,
+        listener_name: str | None = None,
     ):
         self._pulsar_url = pulsar_url
         self._topic = topic
         self._subscription = subscription
         self._handler = process_matching_handler
+        self._listener_name = listener_name
         self._stop_event = threading.Event()
         self._thread: threading.Thread | None = None
         self._client: pulsar.Client | None = None
@@ -55,7 +57,10 @@ class WorkCreatedConsumer:
 
     def _run(self) -> None:
         try:
-            self._client = pulsar.Client(self._pulsar_url, listener_name='internal')
+            client_kwargs = {}
+            if self._listener_name:
+                client_kwargs['listener_name'] = self._listener_name
+            self._client = pulsar.Client(self._pulsar_url, **client_kwargs)
             self._consumer = self._client.subscribe(
                 self._topic,
                 self._subscription,

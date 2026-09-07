@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     APP_VERSION: str = '1'
     SERVICE_NAME: str = 'work-orchestration'
     PULSAR_URL: str = 'pulsar://localhost:6650'
+    PULSAR_LISTENER_NAME: str = ''
     MESSAGING_ENABLED: bool = False
     WORK_CREATED_TOPIC: str = 'persistent://public/default/hda-work-created-v1'
     PERSISTENCE_BACKEND: Literal['inmemory', 'postgres'] = 'inmemory'

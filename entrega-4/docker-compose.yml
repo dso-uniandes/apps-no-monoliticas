@@ -29,7 +29,7 @@ services:
       retries: 20
 
   zookeeper:
-    image: apachepulsar/pulsar:latest
+    image: apachepulsar/pulsar:4.0.13
     container_name: zookeeper
     restart: on-failure
     user: "0"
@@ -50,7 +50,7 @@ services:
       retries: 30
 
   pulsar-init:
-    image: apachepulsar/pulsar:latest
+    image: apachepulsar/pulsar:4.0.13
     container_name: pulsar-init
     hostname: pulsar-init
     networks:
@@ -67,7 +67,7 @@ services:
         condition: service_healthy
 
   bookie:
-    image: apachepulsar/pulsar:latest
+    image: apachepulsar/pulsar:4.0.13
     container_name: bookie
     restart: on-failure
     user: "0"
@@ -89,7 +89,7 @@ services:
       && exec bin/pulsar bookie"
 
   broker:
-    image: apachepulsar/pulsar:latest
+    image: apachepulsar/pulsar:4.0.13
     container_name: broker
     hostname: broker
     restart: on-failure
@@ -163,6 +163,7 @@ services:
       AUTO_CREATE_SCHEMA: "true"
       MESSAGING_ENABLED: "true"
       PULSAR_URL: pulsar://broker:6650
+      PULSAR_LISTENER_NAME: internal
       WORK_CREATED_TOPIC: persistent://public/default/hda-work-created-v1
     ports:
       - "8003:8000"
@@ -183,6 +184,7 @@ services:
     environment:
       MESSAGING_ENABLED: "true"
       PULSAR_URL: pulsar://broker:6650
+      PULSAR_LISTENER_NAME: internal
       WORK_CREATED_TOPIC: persistent://public/default/hda-work-created-v1
       WORK_CREATED_SUBSCRIPTION: hda-provider-matching-v1
     ports:
