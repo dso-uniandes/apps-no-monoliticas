@@ -10,3 +10,5 @@ class WorkCreated(EventoDominio):
     partner_id: str | None = None
     external_reference: str | None = None
     status: str | None = None
+    city: str | None = None
+    country: str | None = None

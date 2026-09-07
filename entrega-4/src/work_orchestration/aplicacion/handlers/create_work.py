@@ -1,8 +1,12 @@
 from seedwork.aplicacion.comandos import ComandoHandler
 
 from work_orchestration.aplicacion.comandos.create_work import CreateWork
+from work_orchestration.aplicacion.mappers.work_created_integration_mapper import (
+    WorkCreatedIntegrationMapper,
+)
 from work_orchestration.aplicacion.puertos.event_publisher import EventPublisher
 from work_orchestration.dominio.entidades import Work
+from work_orchestration.dominio.eventos import WorkCreated
 from work_orchestration.dominio.repositorios import WorkRepository
 
 
@@ -25,7 +29,9 @@ class CreateWorkHandler(ComandoHandler):
         self._repositorio.agregar(work)
 
         for evento in work.eventos:
-            self._event_publisher.publish(evento)
+            if isinstance(evento, WorkCreated):
+                integration_event = WorkCreatedIntegrationMapper.to_integration(evento)
+                self._event_publisher.publish(integration_event)
         work.limpiar_eventos()
 
         return work

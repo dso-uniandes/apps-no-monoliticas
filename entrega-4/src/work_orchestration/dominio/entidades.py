@@ -45,6 +45,8 @@ class Work(AgregacionRaiz):
                 partner_id=partner_id,
                 external_reference=external_reference,
                 status=status.valor,
+                city=city,
+                country=country,
             )
         )
         return work
