@@ -1,11 +1,14 @@
 from pydantic_settings import BaseSettings
-from typing import Any
+from typing import Any, Literal
 
 
 class Settings(BaseSettings):
     APP_VERSION: str = '1'
     SERVICE_NAME: str = 'partner-integration'
     MESSAGING_ENABLED: bool = False
+    PERSISTENCE_BACKEND: Literal['inmemory', 'sqlite'] = 'inmemory'
+    DATABASE_URL: str = 'sqlite:////data/partner_integration.db'
+    AUTO_CREATE_SCHEMA: bool = True
 
 
 settings = Settings()

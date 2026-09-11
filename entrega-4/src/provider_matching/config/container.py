@@ -1,18 +1,36 @@
 from provider_matching.aplicacion.handlers.process_matching import ProcessMatchingHandler
 from provider_matching.config.settings import settings
+from provider_matching.dominio.repositorios import MatchingRepository
 from provider_matching.infraestructura.mensajeria.noop_event_publisher import NoOpEventPublisher
 from provider_matching.infraestructura.persistencia.in_memory_matching_repository import (
     InMemoryMatchingRepository,
 )
 
-_matching_repository = InMemoryMatchingRepository()
+_matching_repository: MatchingRepository | None = None
 _event_publisher = NoOpEventPublisher()
 _work_created_consumer = None
 
 
+def get_matching_repository() -> MatchingRepository:
+    global _matching_repository
+    if _matching_repository is None:
+        if settings.PERSISTENCE_BACKEND == 'sqlite':
+            from provider_matching.infraestructura.persistencia.sqlite_matching_repository import (
+                SQLiteMatchingRepository,
+            )
+
+            _matching_repository = SQLiteMatchingRepository(
+                settings.DATABASE_URL,
+                settings.AUTO_CREATE_SCHEMA,
+            )
+        else:
+            _matching_repository = InMemoryMatchingRepository()
+    return _matching_repository
+
+
 def get_process_matching_handler() -> ProcessMatchingHandler:
     return ProcessMatchingHandler(
-        repositorio=_matching_repository,
+        repositorio=get_matching_repository(),
         event_publisher=_event_publisher,
     )
 
@@ -49,3 +67,8 @@ def shutdown_messaging() -> None:
     if _work_created_consumer is not None:
         _work_created_consumer.stop()
         _work_created_consumer = None
+
+
+def shutdown_persistence() -> None:
+    global _matching_repository
+    _matching_repository = None

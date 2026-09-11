@@ -25,6 +25,15 @@ spec:
           env:
             - name: MESSAGING_ENABLED
               value: "false"
+            - name: PERSISTENCE_BACKEND
+              value: sqlite
+            - name: DATABASE_URL
+              value: sqlite:////data/partner_integration.db
+            - name: AUTO_CREATE_SCHEMA
+              value: "true"
+          volumeMounts:
+            - name: partner-integration-data
+              mountPath: /data
           resources:
             requests:
               cpu: 50m
@@ -44,6 +53,9 @@ spec:
               port: http
             initialDelaySeconds: 15
             periodSeconds: 20
+      volumes:
+        - name: partner-integration-data
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service

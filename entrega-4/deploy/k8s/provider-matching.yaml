@@ -31,6 +31,15 @@ spec:
               value: persistent://public/default/hda-work-created-v1
             - name: WORK_CREATED_SUBSCRIPTION
               value: hda-provider-matching-v1
+            - name: PERSISTENCE_BACKEND
+              value: sqlite
+            - name: DATABASE_URL
+              value: sqlite:////data/provider_matching.db
+            - name: AUTO_CREATE_SCHEMA
+              value: "true"
+          volumeMounts:
+            - name: provider-matching-data
+              mountPath: /data
           resources:
             requests:
               cpu: 100m
@@ -50,6 +59,9 @@ spec:
               port: http
             initialDelaySeconds: 20
             periodSeconds: 20
+      volumes:
+        - name: provider-matching-data
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service

@@ -1,118 +1,41 @@
 @startuml
 left to right direction
+skinparam componentStyle rectangle
 
-package "src" {
-    package "aeroalpes" as aeroalpes_src {
-        package "api" as api
-        note right of api
-            Endpoints HTTP expuestos vía Flask.
-        end note
+actor "Partner externo / UI" as Partner
 
-        package "config" as config
-        note bottom of config
-            Configuraciones y acceso a la base de datos.
-        end note
-
-        package "ejemplos" as ejemplos
-        note bottom of ejemplos
-            Código de muestra y pruebas de concepto.
-        end note
-
-        package "modulos" as modulos {
-            package "hoteles"
-            package "sagas"
-            package "vehiculos"
-            package "vuelos" as vuelos
-        }
-        note bottom of modulos
-            Dominios de negocio implementados
-            siguiendo el estilo hexagonal
-            (aplicación, dominio e infraestructura).
-        end note
-
-        package "seedwork" as seedwork
-        note bottom of seedwork
-            Abstracciones y utilidades comunes
-            que soportan la arquitectura.
-        end note
-    }
-
-    package "cliente" as cliente {
-        package "api" as cliente_api
-        note right of cliente_api
-            Endpoints HTTP expuestos vía Flask.
-        end note
-
-        package "config" as cliente_config
-        note bottom of cliente_config
-            Configuraciones y acceso a la base de datos.
-        end note
-
-        package "ejemplos" as cliente_ejemplos
-        note bottom of cliente_ejemplos
-            Código de muestra y pruebas de concepto.
-        end note
-
-        package "modulos" as cliente_modulos
-        note bottom of cliente_modulos
-            Dominios de negocio implementados
-            siguiendo el estilo hexagonal
-            (aplicación, dominio e infraestructura).
-        end note
-
-        package "seedwork" as cliente_seedwork
-        note bottom of cliente_seedwork
-            Abstracciones y utilidades comunes
-            que soportan la arquitectura.
-        end note
-    }
-
-    package "sidecar" as sidecar_pkg {
-        package "aeroalpes" as aeroalpes_sidecar {
-            package "pb2py"
-            package "protos"
-            package "servicios"
-        }
-        package "mensajes"
-    }
-    note bottom of sidecar_pkg
-        Adaptador gRPC que comunica
-        clientes externos con AeroAlpes.
-    end note
-
-    package "notificaciones"
-    note bottom of notificaciones
-        Suscriptor de eventos para simulación
-        de notificaciones.
-    end note
-
-    package "ui" as ui_pkg {
-        package "aeroalpes" as aeroalpes_ui {
-            package "vistas"
-        }
-    }
-    note bottom of ui_pkg
-        Interfaz gráfica para resolución
-        de WebSockets.
-    end note
-
-    package "pagos"
-    note bottom of pagos
-        Microservicio que emula pagos
-        de reservas.
-    end note
-
-    package "integracion_gds"
-    note bottom of integracion_gds
-        Microservicio que emula integraciones
-        con los GDS.
-    end note
-
-    pagos -[hidden]-> integracion_gds
-    ui_pkg -[hidden]-> pagos
-    notificaciones -[hidden]-> ui_pkg
-    sidecar_pkg -[hidden]-> notificaciones
-    cliente -[hidden]-> sidecar_pkg
-    aeroalpes_src -[hidden]-> cliente
+package "Hogar de los Alpes POC" {
+  [Partner Integration\nBFF / anti-corruption layer] as PI
+  [Partner Rules\nreglas de elegibilidad] as PR
+  [Work Orchestration\nagregado Work + API] as WO
+  [Provider Matching\nasignacion de proveedor] as PM
 }
+
+queue "Apache Pulsar\npersistent://public/default/hda-work-created-v1\nAvro WorkCreatedV1" as Pulsar
+database "PostgreSQL / Cloud SQL\nwork-orchestration" as DB
+database "SQLite\npartner-integration" as PIDB
+database "SQLite\nprovider-matching" as PMDB
+cloud "GKE + Artifact Registry\nTerraform + Kubernetes" as GCP
+
+Partner --> PI : comando normalize partner request
+Partner --> WO : comando CreateWork / query GetWork
+PI --> PR : comando EvaluatePartnerRules
+PI --> PIDB : CRUD
+note bottom of PR
+  Pendiente para otro miembro:
+  persistencia propia y evidencia
+  del escenario de modificabilidad.
+end note
+WO --> DB : CRUD
+WO --> Pulsar : evento de integracion\nWorkCreatedV1
+Pulsar --> PM : suscripcion shared\nhda-provider-matching-v1
+PM --> PM : comando ProcessMatching
+PM --> PMDB : CRUD
+
+GCP .. PI
+GCP .. PR
+GCP .. WO
+GCP .. PM
+GCP .. Pulsar
+GCP .. DB
 @enduml

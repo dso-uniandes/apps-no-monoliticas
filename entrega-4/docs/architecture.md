@@ -1,1 +1,47 @@
-[![](https://img.plantuml.biz/plantuml/png/tLTBRjim4Dtx58HNBT1sqGCKCPB-5WM29a0NHM6CoR7CM28PVjoaHGxJ0tIL8_XY7PAI8jcIdIxIHGalAFA9y-RDX_A9ys1zgCf9YKlFl6PM5YlFXBJ8lTHgCZ70rr0WcphBf-pdXD5erm2jXjAWcp9mh7sQ4xQ6zk56Pg2HxQRI7ckhUjdRYUEj4aPBvHtxS7bvpl3617HUExRP_WRshWItVjM-W4gauoRxbhbMIraautdQjx_Gtkig4jZPZUCqBGKBd0H1nsuPS8vECs0bi0KuP89-GBGUnGMli3Abpfer3sDyzlOJe-sza8MEPgkeXmKYPMn08XCNoGcEnkj7qQcq20sRUjw9NG-weXDA2lRmheC2nlOsk98ycHdP3zXmoDCMTZUcJCsrTzwPhgIIEecWiD0KCIP9FwnGUH0xQ4THbQICPbWoab6Mcgtm1WgjeEmXdu4f9QS4sDwh5qnaAmoPL4iBCG21UqgGvuyIt26AxzgkaxVDmvYNU_jnp1OnvhpDnq3KfG21CRkhG8iz-7L0vhJHreEAAGlsEaYFYV80uwnwlz1vIK9vp0MKvuSAl8RCnmjz2177KnHyRUf8uG-ZudZI1j3OFTO8Hd69uLCrXCRgRh6DaFi_QhBnvbXjZkBY-FSrwgH03ZQtbJoVctKnMATZztP-RQp_cyLhSplImOtLVhIzExGRIL9qzky64W-LWwlcVic0tNRuu5Vx_ao0YObaMV7v_3GfcHIcv6WnTQZelhtnQ9LEdm5iHexFekDPuNv-jBHeIIvJfiLGJeTezI6jrOlWk9LKTpOcFsw80basGENfP1NAdBmjF1P8xw23j49kjK7-RP2378llHjBtu5wC1WEHpRR8ZoIkNS8FLjZjh-X0zj9Ibop3dfTVS76X-HhzOGyDLVsmtccdFV6Jv5OtAPRYZr7S7HJP9Jg4WiDMwVB18lVwUI66xUzWZZBfu3lf4LCmVcszFxiOPaJqsSklAoa4gcyltmoQhUFVXJtutK-d7gWJm6wpw486ihgv-xkmtPhi_mte8kkt9tUJ4t8r_ktu0m00)](https://editor.plantuml.com/uml/tLTBRjim4Dtx58HNBT1sqGCKCPB-5WM29a0NHM6CoR7CM28PVjoaHGxJ0tIL8_XY7PAI8jcIdIxIHGalAFA9y-RDX_A9ys1zgCf9YKlFl6PM5YlFXBJ8lTHgCZ70rr0WcphBf-pdXD5erm2jXjAWcp9mh7sQ4xQ6zk56Pg2HxQRI7ckhUjdRYUEj4aPBvHtxS7bvpl3617HUExRP_WRshWItVjM-W4gauoRxbhbMIraautdQjx_Gtkig4jZPZUCqBGKBd0H1nsuPS8vECs0bi0KuP89-GBGUnGMli3Abpfer3sDyzlOJe-sza8MEPgkeXmKYPMn08XCNoGcEnkj7qQcq20sRUjw9NG-weXDA2lRmheC2nlOsk98ycHdP3zXmoDCMTZUcJCsrTzwPhgIIEecWiD0KCIP9FwnGUH0xQ4THbQICPbWoab6Mcgtm1WgjeEmXdu4f9QS4sDwh5qnaAmoPL4iBCG21UqgGvuyIt26AxzgkaxVDmvYNU_jnp1OnvhpDnq3KfG21CRkhG8iz-7L0vhJHreEAAGlsEaYFYV80uwnwlz1vIK9vp0MKvuSAl8RCnmjz2177KnHyRUf8uG-ZudZI1j3OFTO8Hd69uLCrXCRgRh6DaFi_QhBnvbXjZkBY-FSrwgH03ZQtbJoVctKnMATZztP-RQp_cyLhSplImOtLVhIzExGRIL9qzky64W-LWwlcVic0tNRuu5Vx_ao0YObaMV7v_3GfcHIcv6WnTQZelhtnQ9LEdm5iHexFekDPuNv-jBHeIIvJfiLGJeTezI6jrOlWk9LKTpOcFsw80basGENfP1NAdBmjF1P8xw23j49kjK7-RP2378llHjBtu5wC1WEHpRR8ZoIkNS8FLjZjh-X0zj9Ibop3dfTVS76X-HhzOGyDLVsmtccdFV6Jv5OtAPRYZr7S7HJP9Jg4WiDMwVB18lVwUI66xUzWZZBfu3lf4LCmVcszFxiOPaJqsSklAoa4gcyltmoQhUFVXJtutK-d7gWJm6wpw486ihgv-xkmtPhi_mte8kkt9tUJ4t8r_ktu0m00)
+# Arquitectura POC - Entrega 4
+
+El diagrama fuente esta en `docs/architecture.puml`.
+
+```plantuml
+@startuml
+left to right direction
+skinparam componentStyle rectangle
+
+actor "Partner externo / UI" as Partner
+
+package "Hogar de los Alpes POC" {
+  [Partner Integration\nBFF / anti-corruption layer] as PI
+  [Partner Rules\nreglas de elegibilidad] as PR
+  [Work Orchestration\nagregado Work + API] as WO
+  [Provider Matching\nasignacion de proveedor] as PM
+}
+
+queue "Apache Pulsar\npersistent://public/default/hda-work-created-v1\nAvro WorkCreatedV1" as Pulsar
+database "PostgreSQL / Cloud SQL\nwork-orchestration" as DB
+database "SQLite\npartner-integration" as PIDB
+database "SQLite\nprovider-matching" as PMDB
+cloud "GKE + Artifact Registry\nTerraform + Kubernetes" as GCP
+
+Partner --> PI : comando normalize partner request
+Partner --> WO : comando CreateWork / query GetWork
+PI --> PR : comando EvaluatePartnerRules
+PI --> PIDB : CRUD
+note bottom of PR
+  Pendiente para otro miembro:
+  persistencia propia y evidencia
+  del escenario de modificabilidad.
+end note
+WO --> DB : CRUD
+WO --> Pulsar : evento de integracion\nWorkCreatedV1
+Pulsar --> PM : suscripcion shared\nhda-provider-matching-v1
+PM --> PM : comando ProcessMatching
+PM --> PMDB : CRUD
+
+GCP .. PI
+GCP .. PR
+GCP .. WO
+GCP .. PM
+GCP .. Pulsar
+GCP .. DB
+@enduml
+```

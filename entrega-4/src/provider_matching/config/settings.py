@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-from typing import Any
+from typing import Any, Literal
 
 
 class Settings(BaseSettings):
@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     MESSAGING_ENABLED: bool = False
     WORK_CREATED_TOPIC: str = 'persistent://public/default/hda-work-created-v1'
     WORK_CREATED_SUBSCRIPTION: str = 'hda-provider-matching-v1'
+    PERSISTENCE_BACKEND: Literal['inmemory', 'sqlite'] = 'inmemory'
+    DATABASE_URL: str = 'sqlite:////data/provider_matching.db'
+    AUTO_CREATE_SCHEMA: bool = True
 
 
 settings = Settings()

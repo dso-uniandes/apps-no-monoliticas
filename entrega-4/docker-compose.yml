@@ -4,6 +4,8 @@ networks:
 
 volumes:
   postgres_data:
+  partner_integration_data:
+  provider_matching_data:
   zookeeper_data:
   bookkeeper_data:
 
@@ -133,6 +135,11 @@ services:
       - hda
     environment:
       MESSAGING_ENABLED: "false"
+      PERSISTENCE_BACKEND: sqlite
+      DATABASE_URL: sqlite:////data/partner_integration.db
+      AUTO_CREATE_SCHEMA: "true"
+    volumes:
+      - partner_integration_data:/data
     ports:
       - "8001:8000"
 
@@ -187,6 +194,11 @@ services:
       PULSAR_LISTENER_NAME: internal
       WORK_CREATED_TOPIC: persistent://public/default/hda-work-created-v1
       WORK_CREATED_SUBSCRIPTION: hda-provider-matching-v1
+      PERSISTENCE_BACKEND: sqlite
+      DATABASE_URL: sqlite:////data/provider_matching.db
+      AUTO_CREATE_SCHEMA: "true"
+    volumes:
+      - provider_matching_data:/data
     ports:
       - "8004:8000"
     depends_on:
