@@ -1,4 +1,7 @@
-from partner_integration.aplicacion.handlers.normalize_partner_request import NormalizePartnerRequestHandler
+from partner_integration.aplicacion.handlers.normalize_partner_request import (
+    NormalizePartnerRequestHandler,
+)
+from partner_integration.aplicacion.puertos.event_publisher import EventPublisher
 from partner_integration.config.settings import settings
 from partner_integration.dominio.repositorios import PartnerRequestRepository
 from partner_integration.infraestructura.adapters.registry import get_payload_adapters
@@ -8,7 +11,22 @@ from partner_integration.infraestructura.persistencia.in_memory_partner_request_
 )
 
 _partner_request_repository: PartnerRequestRepository | None = None
-_event_publisher = NoOpEventPublisher()
+_event_publisher: EventPublisher | None = None
+
+
+def _build_event_publisher() -> EventPublisher:
+    if settings.MESSAGING_ENABLED:
+        from partner_integration.infraestructura.mensajeria.pulsar_event_publisher import (
+            PulsarEventPublisher,
+        )
+
+        listener_name = settings.PULSAR_LISTENER_NAME.strip() or None
+        return PulsarEventPublisher(
+            pulsar_url=settings.PULSAR_URL,
+            topic=settings.EVALUATE_PARTNER_RULES_TOPIC,
+            listener_name=listener_name,
+        )
+    return NoOpEventPublisher()
 
 
 def get_partner_request_repository() -> PartnerRequestRepository:
@@ -28,12 +46,26 @@ def get_partner_request_repository() -> PartnerRequestRepository:
     return _partner_request_repository
 
 
+def get_event_publisher() -> EventPublisher:
+    global _event_publisher
+    if _event_publisher is None:
+        _event_publisher = _build_event_publisher()
+    return _event_publisher
+
+
 def get_normalize_partner_request_handler() -> NormalizePartnerRequestHandler:
     return NormalizePartnerRequestHandler(
         repositorio=get_partner_request_repository(),
-        event_publisher=_event_publisher,
+        event_publisher=get_event_publisher(),
         payload_adapters=get_payload_adapters(),
     )
+
+
+def shutdown_messaging() -> None:
+    global _event_publisher
+    if _event_publisher is not None:
+        _event_publisher.close()
+        _event_publisher = None
 
 
 def shutdown_persistence() -> None:

@@ -7,6 +7,7 @@ RUN pip install --upgrade --no-cache-dir pip setuptools wheel \
     && pip install --no-cache-dir -r hda-requirements.txt
 
 COPY src/seedwork ./seedwork
+COPY src/published_language ./published_language
 COPY src/partner_integration ./partner_integration
 
 ENV PYTHONPATH=/app

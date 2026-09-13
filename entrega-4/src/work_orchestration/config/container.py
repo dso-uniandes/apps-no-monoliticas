@@ -10,6 +10,7 @@ from work_orchestration.infraestructura.persistencia.in_memory_work_repository i
 
 _work_repository: WorkRepository | None = None
 _event_publisher: EventPublisher | None = None
+_partner_rules_evaluated_consumer = None
 
 
 def _build_event_publisher() -> EventPublisher:
@@ -71,8 +72,39 @@ def get_get_work_handler() -> GetWorkHandler:
     return GetWorkHandler(repositorio=get_work_repository())
 
 
+def get_partner_rules_evaluated_consumer():
+    global _partner_rules_evaluated_consumer
+    if not settings.MESSAGING_ENABLED:
+        return None
+
+    if _partner_rules_evaluated_consumer is None:
+        from work_orchestration.infraestructura.mensajeria.partner_rules_evaluated_consumer import (
+            PartnerRulesEvaluatedConsumer,
+        )
+
+        listener_name = settings.PULSAR_LISTENER_NAME.strip() or None
+        _partner_rules_evaluated_consumer = PartnerRulesEvaluatedConsumer(
+            pulsar_url=settings.PULSAR_URL,
+            topic=settings.PARTNER_RULES_EVALUATED_TOPIC,
+            subscription=settings.PARTNER_RULES_EVALUATED_SUBSCRIPTION,
+            create_work_handler=get_create_work_handler(),
+            listener_name=listener_name,
+        )
+    return _partner_rules_evaluated_consumer
+
+
+def start_messaging() -> None:
+    get_event_publisher()
+    consumer = get_partner_rules_evaluated_consumer()
+    if consumer is not None:
+        consumer.start()
+
+
 def shutdown_messaging() -> None:
-    global _event_publisher
+    global _event_publisher, _partner_rules_evaluated_consumer
+    if _partner_rules_evaluated_consumer is not None:
+        _partner_rules_evaluated_consumer.stop()
+        _partner_rules_evaluated_consumer = None
     if _event_publisher is not None:
         _event_publisher.close()
         _event_publisher = None

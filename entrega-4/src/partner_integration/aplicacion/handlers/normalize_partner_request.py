@@ -1,5 +1,9 @@
+from datetime import datetime
+from uuid import uuid4
+
 from seedwork.aplicacion.comandos import ComandoHandler
 
+from published_language.v1.evaluate_partner_rules import EvaluatePartnerRulesV1
 from partner_integration.aplicacion.comandos.normalize_partner_request import NormalizePartnerRequest
 from partner_integration.aplicacion.puertos.event_publisher import EventPublisher
 from partner_integration.aplicacion.puertos.payload_adapter import PartnerPayloadAdapter
@@ -44,8 +48,18 @@ class NormalizePartnerRequestHandler(ComandoHandler):
         partner_request.normalize()
         self._repositorio.agregar(partner_request)
 
-        for evento in partner_request.eventos:
-            self._event_publisher.publish(evento)
+        data = (partner_request.normalized_payload or {}).get('data', {})
+        evaluate_command = EvaluatePartnerRulesV1(
+            command_id=str(uuid4()),
+            occurred_at=int(datetime.utcnow().timestamp() * 1000),
+            schema_version='1',
+            partner_id=comando.partner_id,
+            external_reference=external_reference,
+            city=str(data.get('city') or ''),
+            country=str(data.get('country') or ''),
+            service_type=str(data.get('service_type') or ''),
+        )
+        self._event_publisher.publish(evaluate_command)
         partner_request.limpiar_eventos()
 
         return partner_request

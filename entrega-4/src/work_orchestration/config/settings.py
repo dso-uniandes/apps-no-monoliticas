@@ -9,6 +9,10 @@ class Settings(BaseSettings):
     PULSAR_LISTENER_NAME: str = ''
     MESSAGING_ENABLED: bool = False
     WORK_CREATED_TOPIC: str = 'persistent://public/default/hda-work-created-v1'
+    PARTNER_RULES_EVALUATED_TOPIC: str = (
+        'persistent://public/default/hda-partner-rules-evaluated-v1'
+    )
+    PARTNER_RULES_EVALUATED_SUBSCRIPTION: str = 'hda-work-orchestration-v1'
     PERSISTENCE_BACKEND: Literal['inmemory', 'postgres'] = 'inmemory'
     DATABASE_URL: str = 'postgresql+psycopg://hda:hda@localhost:5432/hda'
     AUTO_CREATE_SCHEMA: bool = True
