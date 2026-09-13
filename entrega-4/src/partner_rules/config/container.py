@@ -2,12 +2,13 @@ from partner_rules.aplicacion.handlers.evaluate_partner_rules import EvaluatePar
 from partner_rules.aplicacion.puertos.event_publisher import EventPublisher
 from partner_rules.config.settings import settings
 from partner_rules.dominio.entidades import PartnerRule
+from partner_rules.dominio.repositorios import PartnerRuleRepository
 from partner_rules.infraestructura.mensajeria.noop_event_publisher import NoOpEventPublisher
 from partner_rules.infraestructura.persistencia.in_memory_partner_rule_repository import (
     InMemoryPartnerRuleRepository,
 )
 
-_partner_rule_repository = InMemoryPartnerRuleRepository()
+_partner_rule_repository: PartnerRuleRepository | None = None
 _event_publisher: EventPublisher | None = None
 _evaluate_partner_rules_consumer = None
 _seeded = False
@@ -45,7 +46,20 @@ def _build_event_publisher() -> EventPublisher:
     return NoOpEventPublisher()
 
 
-def get_partner_rule_repository() -> InMemoryPartnerRuleRepository:
+def get_partner_rule_repository() -> PartnerRuleRepository:
+    global _partner_rule_repository
+    if _partner_rule_repository is None:
+        if settings.PERSISTENCE_BACKEND == 'sqlite':
+            from partner_rules.infraestructura.persistencia.sqlite_partner_rule_repository import (
+                SQLitePartnerRuleRepository,
+            )
+
+            _partner_rule_repository = SQLitePartnerRuleRepository(
+                settings.DATABASE_URL,
+                settings.AUTO_CREATE_SCHEMA,
+            )
+        else:
+            _partner_rule_repository = InMemoryPartnerRuleRepository()
     _ensure_seed_rules()
     return _partner_rule_repository
 
@@ -100,3 +114,9 @@ def shutdown_messaging() -> None:
     if _event_publisher is not None:
         _event_publisher.close()
         _event_publisher = None
+
+
+def shutdown_persistence() -> None:
+    global _partner_rule_repository, _seeded
+    _partner_rule_repository = None
+    _seeded = False

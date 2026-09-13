@@ -5,6 +5,7 @@ networks:
 volumes:
   postgres_data:
   partner_integration_data:
+  partner_rules_data:
   provider_matching_data:
   zookeeper_data:
   bookkeeper_data:
@@ -164,6 +165,11 @@ services:
       EVALUATE_PARTNER_RULES_TOPIC: persistent://public/default/hda-evaluate-partner-rules-v1
       EVALUATE_PARTNER_RULES_SUBSCRIPTION: hda-partner-rules-v1
       PARTNER_RULES_EVALUATED_TOPIC: persistent://public/default/hda-partner-rules-evaluated-v1
+      PERSISTENCE_BACKEND: sqlite
+      DATABASE_URL: sqlite:////data/partner_rules.db
+      AUTO_CREATE_SCHEMA: "true"
+    volumes:
+      - partner_rules_data:/data
     ports:
       - "8002:8000"
     depends_on:
