@@ -6,3 +6,4 @@ from seedwork.aplicacion.comandos import Comando
 @dataclass
 class EvaluatePartnerRules(Comando):
     partner_id: str
+    service_type: str | None = None

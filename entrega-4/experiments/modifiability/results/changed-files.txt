@@ -1,0 +1,16 @@
+src/partner_integration/aplicacion/comandos/normalize_partner_request.py
+src/partner_integration/aplicacion/handlers/normalize_partner_request.py
+src/partner_integration/config/container.py
+src/partner_integration/aplicacion/puertos/payload_adapter.py
+src/partner_integration/infraestructura/adapters/__init__.py
+src/partner_integration/infraestructura/adapters/partner_demo_payload_adapter.py
+src/partner_integration/infraestructura/adapters/registry.py
+src/partner_rules/aplicacion/comandos/evaluate_partner_rules.py
+src/partner_rules/aplicacion/handlers/evaluate_partner_rules.py
+src/partner_rules/config/container.py
+experiments/modifiability/README.md
+experiments/modifiability/baseline_commit.txt
+experiments/modifiability/results/changed-files.txt
+experiments/modifiability/results/results.json
+experiments/modifiability/results/summary.md
+experiments/modifiability/run_experiment.py

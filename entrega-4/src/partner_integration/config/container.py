@@ -1,6 +1,7 @@
 from partner_integration.aplicacion.handlers.normalize_partner_request import NormalizePartnerRequestHandler
 from partner_integration.config.settings import settings
 from partner_integration.dominio.repositorios import PartnerRequestRepository
+from partner_integration.infraestructura.adapters.registry import get_payload_adapters
 from partner_integration.infraestructura.mensajeria.noop_event_publisher import NoOpEventPublisher
 from partner_integration.infraestructura.persistencia.in_memory_partner_request_repository import (
     InMemoryPartnerRequestRepository,
@@ -31,6 +32,7 @@ def get_normalize_partner_request_handler() -> NormalizePartnerRequestHandler:
     return NormalizePartnerRequestHandler(
         repositorio=get_partner_request_repository(),
         event_publisher=_event_publisher,
+        payload_adapters=get_payload_adapters(),
     )
 
 

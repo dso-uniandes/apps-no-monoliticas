@@ -14,7 +14,7 @@ La POC cubre los puntos esperados para Entrega 4:
 | Comunicacion por comandos y eventos | Comandos en `src/*/aplicacion/comandos`, handlers en `src/*/aplicacion/handlers`, eventos de dominio y evento de integracion `WorkCreatedV1` |
 | Broker Apache Pulsar | `docker-compose.yml`, `deploy/k8s/pulsar.yaml`, publicador y consumidor Pulsar |
 | Esquema de eventos y evolucion | Avro con `published_language/v1/work_created.py` y `published_language/v2/work_created.py`; topic `hda-work-created-v1` y version en `schema_version` |
-| Almacenamiento CRUD descentralizado | Base lista: PostgreSQL para `work-orchestration`, SQLite propia para `partner-integration` y `provider-matching`; queda pendiente completar BD propia de `partner-rules` |
+| Almacenamiento CRUD descentralizado | PostgreSQL para `work-orchestration`, SQLite propia para `partner-integration` y `provider-matching`; queda pendiente completar BD propia de `partner-rules` |
 | Despliegue | Docker Compose local y Terraform + GKE + Cloud SQL + Artifact Registry |
 | Verificacion funcional | Docker Compose, health checks, POST `/works`, logs de publicacion/consumo y verificacion de persistencia |
 
@@ -22,11 +22,42 @@ La POC cubre los puntos esperados para Entrega 4:
 
 Estos escenarios vienen de Entrega 3 y corresponden a los tres elegidos por el equipo para la entrega parcial:
 
+| Experimento | Estado |
+|---|---|
+| Modificabilidad / Configurabilidad | COMPLETO — PASS |
+| Escalabilidad | Preparado — pendiente ejecucion/medicion |
+| Desplegabilidad / Autonomia | Preparado — pendiente ejecucion de compatibilidad |
+
 | Atributo | Escenario de Entrega 3 | Validacion en esta POC |
 |---|---|---|
-| Escalabilidad | Pico de Provider Matching: 10.000 trabajos en cola; 95% procesados en menos de 60 s | Base tecnica lista: `provider-matching` consume `WorkCreatedV1` desde Pulsar con suscripcion `Shared`. Queda pendiente ejecutar la prueba de carga, medir backlog y documentar resultados |
-| Modificabilidad / Configurabilidad | Incorporar un nuevo partner B2B2C sin modificar el agregado `Work`; cambio localizado en ACL/reglas | Base lista en `partner-integration`; queda pendiente completar `partner-rules` con persistencia propia, endpoints/evidencia de reglas y pruebas focalizadas |
-| Desplegabilidad / Autonomia | Compatibilidad de evento versionado: consumidores v1 siguen operando mientras entra `WorkCreatedV2`; 0 errores de deserializacion | `published_language/v2` agrega campos con defaults y conserva todos los campos de `WorkCreatedV1` |
+| Escalabilidad | Pico de Provider Matching: 10.000 trabajos en cola; 95% procesados en menos de 60 s | Base tecnica lista: `provider-matching` consume `WorkCreatedV1` desde Pulsar con suscripcion `Shared`. Pendiente ejecutar la prueba de carga, medir backlog y documentar resultados |
+| Modificabilidad / Configurabilidad | Incorporar un nuevo partner B2B2C sin modificar el agregado `Work`; cambio localizado en ACL/reglas | Experimento ejecutado con `partner-demo`: cambios solo en Partner Integration y Partner Rules; Work Orchestration sin cambios. Resultado: PASS. Evidencia en `experiments/modifiability/results/` |
+| Desplegabilidad / Autonomia | Compatibilidad de evento versionado: consumidores v1 siguen operando mientras entra `WorkCreatedV2`; 0 errores de deserializacion | Base preparada: `published_language/v2` agrega campos con defaults y conserva todos los campos de `WorkCreatedV1`. Pendiente ejecutar la prueba de compatibilidad |
+
+### Modificabilidad / Configurabilidad
+
+Objetivo:
+Incorporar un nuevo partner B2B2C sin modificar Work Orchestration.
+
+Resultado experimental:
+
+- Bounded Contexts modificados: 2
+- Cambios en Work Orchestration: 0
+- partner-demo soportado: Si
+- Normalizacion: exitosa
+- Reglas: exitosas
+- Resultado: PASS
+
+Evidencia:
+
+`experiments/modifiability/results/`
+
+Ejecucion:
+
+```bash
+cd entrega-4
+PYTHONPATH=src python experiments/modifiability/run_experiment.py
+```
 
 ## Microservicios
 
@@ -110,9 +141,10 @@ docker compose down
 
 La POC se puede verificar manualmente con Docker Compose usando los comandos anteriores. Queda como actividad separada del equipo agregar pruebas automatizadas con `pytest` para handlers, contratos de eventos, repositorios y API.
 
-Tambien queda como actividad separada ejecutar el experimento de escalabilidad de `provider-matching`: generar trabajos/eventos, observar backlog en Pulsar, escalar replicas/consumidores y reportar si se cumple el objetivo de procesar el 95% de 10.000 trabajos en menos de 60 s.
+El experimento de modificabilidad ya esta completo (PASS). Quedan pendientes de ejecucion:
 
-Para equilibrar contribuciones, `partner-rules` queda como microservicio pendiente de cierre: agregar persistencia propia, exponer/validar flujo de reglas de partner y documentar evidencia del escenario de modificabilidad.
+- Escalabilidad de `provider-matching`: generar trabajos/eventos, observar backlog en Pulsar, escalar replicas/consumidores y reportar si se cumple el objetivo de procesar el 95% de 10.000 trabajos en menos de 60 s.
+- Desplegabilidad / autonomia: ejecutar la prueba de compatibilidad entre consumidores v1 y `WorkCreatedV2`.
 
 Base sugerida para quien tome esa actividad:
 
