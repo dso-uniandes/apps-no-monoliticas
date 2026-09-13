@@ -1,0 +1,23 @@
+services:
+  zookeeper:
+    container_name: !reset null
+    environment:
+      PULSAR_MEM: -Xms128m -Xmx256m -XX:MaxDirectMemorySize=128m
+
+  bookie:
+    container_name: !reset null
+    environment:
+      PULSAR_MEM: -Xms256m -Xmx512m -XX:MaxDirectMemorySize=256m
+
+  broker:
+    container_name: !reset null
+    environment:
+      PULSAR_MEM: -Xms256m -Xmx512m -XX:MaxDirectMemorySize=256m
+
+  provider-matching:
+    container_name: !reset null
+    ports: !reset []
+    environment:
+      PERSISTENCE_BACKEND: inmemory
+      WORK_CREATED_TOPIC: ${EXPERIMENT_TOPIC}
+      WORK_CREATED_SUBSCRIPTION: ${EXPERIMENT_SUBSCRIPTION}

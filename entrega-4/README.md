@@ -25,12 +25,12 @@ Estos escenarios vienen de Entrega 3 y corresponden a los tres elegidos por el e
 | Experimento | Estado |
 |---|---|
 | Modificabilidad / Configurabilidad | COMPLETO — PASS |
-| Escalabilidad | Preparado — pendiente ejecucion/medicion |
+| Escalabilidad | COMPLETO — PASS con 1 y 4 consumidores |
 | Desplegabilidad / Autonomia | Preparado — pendiente ejecucion de compatibilidad |
 
 | Atributo | Escenario de Entrega 3 | Validacion en esta POC |
 |---|---|---|
-| Escalabilidad | Pico de Provider Matching: 10.000 trabajos en cola; 95% procesados en menos de 60 s | Base tecnica lista: `provider-matching` consume `WorkCreatedV1` desde Pulsar con suscripcion `Shared`. Pendiente ejecutar la prueba de carga, medir backlog y documentar resultados |
+| Escalabilidad | Pico de Provider Matching: 10.000 trabajos en cola; 95% procesados en menos de 60 s | Experimento ejecutado con 1 y 4 consumidores. Ambos procesaron 10.000 de 10.000 mensajes en 60 s. Resultado: PASS. Evidencia en `experiments/scalability/results/` |
 | Modificabilidad / Configurabilidad | Incorporar un nuevo partner B2B2C sin modificar el agregado `Work`; cambio localizado en ACL/reglas | Experimento ejecutado con `partner-demo`: cambios solo en Partner Integration y Partner Rules; Work Orchestration sin cambios. Resultado: PASS. Evidencia en `experiments/modifiability/results/` |
 | Desplegabilidad / Autonomia | Compatibilidad de evento versionado: consumidores v1 siguen operando mientras entra `WorkCreatedV2`; 0 errores de deserializacion | Base preparada: `published_language/v2` agrega campos con defaults y conserva todos los campos de `WorkCreatedV1`. Pendiente ejecutar la prueba de compatibilidad |
 
@@ -141,9 +141,8 @@ docker compose down
 
 La POC se puede verificar manualmente con Docker Compose usando los comandos anteriores. Queda como actividad separada del equipo agregar pruebas automatizadas con `pytest` para handlers, contratos de eventos, repositorios y API.
 
-El experimento de modificabilidad ya esta completo (PASS). Quedan pendientes de ejecucion:
+Los experimentos de modificabilidad y escalabilidad ya estan completos (PASS). Queda pendiente de ejecucion:
 
-- Escalabilidad de `provider-matching`: generar trabajos/eventos, observar backlog en Pulsar, escalar replicas/consumidores y reportar si se cumple el objetivo de procesar el 95% de 10.000 trabajos en menos de 60 s.
 - Desplegabilidad / autonomia: ejecutar la prueba de compatibilidad entre consumidores v1 y `WorkCreatedV2`.
 
 Base sugerida para quien tome esa actividad:

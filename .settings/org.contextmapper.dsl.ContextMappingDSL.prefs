@@ -1,0 +1,17 @@
+#Sat Aug 22 10:29:37 COT 2026
+generateGeneratedAnnotation=false
+includeDateInGenerated=false
+outlet.DEFAULT_OUTPUT.userOutputPerSourceFolder=true
+outlet.DEFAULT_OUTPUT.installDslAsPrimarySource=false
+//outlet.DEFAULT_OUTPUT.sourceFolder.src/test/java.directory=build/cml/test
+eclipse.preferences.version=1
+generateSuppressWarnings=true
+BuilderConfiguration.is_project_specific=true
+//outlet.DEFAULT_OUTPUT.sourceFolder.src/main/resources.directory=build/cml/main
+//outlet.DEFAULT_OUTPUT.sourceFolder.src/main/java.directory=build/cml/main
+useJavaCompilerCompliance=false
+outlet.DEFAULT_OUTPUT.hideLocalSyntheticVariables=true
+//outlet.DEFAULT_OUTPUT.sourceFolder.src/test/resources.directory=build/cml/test
+//outlet.DEFAULT_OUTPUT.sourceFolder.src/main/cml.directory=build/cml/main
+ValidatorConfiguration.is_project_specific=true
+targetJavaVersion=JAVA17
