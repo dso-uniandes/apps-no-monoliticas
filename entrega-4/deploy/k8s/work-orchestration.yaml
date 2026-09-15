@@ -42,6 +42,10 @@ spec:
               value: pulsar://pulsar:6650
             - name: WORK_CREATED_TOPIC
               value: persistent://public/default/hda-work-created-v1
+            - name: PARTNER_RULES_EVALUATED_TOPIC
+              value: persistent://public/default/hda-partner-rules-evaluated-v1
+            - name: PARTNER_RULES_EVALUATED_SUBSCRIPTION
+              value: hda-work-orchestration-v1
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:

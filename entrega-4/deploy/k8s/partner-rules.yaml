@@ -24,7 +24,24 @@ spec:
               name: http
           env:
             - name: MESSAGING_ENABLED
-              value: "false"
+              value: "true"
+            - name: PULSAR_URL
+              value: pulsar://pulsar:6650
+            - name: EVALUATE_PARTNER_RULES_TOPIC
+              value: persistent://public/default/hda-evaluate-partner-rules-v1
+            - name: EVALUATE_PARTNER_RULES_SUBSCRIPTION
+              value: hda-partner-rules-v1
+            - name: PARTNER_RULES_EVALUATED_TOPIC
+              value: persistent://public/default/hda-partner-rules-evaluated-v1
+            - name: PERSISTENCE_BACKEND
+              value: sqlite
+            - name: DATABASE_URL
+              value: sqlite:////data/partner_rules.db
+            - name: AUTO_CREATE_SCHEMA
+              value: "true"
+          volumeMounts:
+            - name: partner-rules-data
+              mountPath: /data
           resources:
             requests:
               cpu: 50m
@@ -44,6 +61,9 @@ spec:
               port: http
             initialDelaySeconds: 15
             periodSeconds: 20
+      volumes:
+        - name: partner-rules-data
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service

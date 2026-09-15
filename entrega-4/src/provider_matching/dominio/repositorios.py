@@ -14,3 +14,11 @@ class MatchingRepository(Repositorio, ABC):
     @abstractmethod
     def agregar(self, entity: Matching):
         ...
+
+    @abstractmethod
+    def actualizar(self, entity: Matching) -> None:
+        ...
+
+    @abstractmethod
+    def eliminar(self, id: UUID) -> bool:
+        ...

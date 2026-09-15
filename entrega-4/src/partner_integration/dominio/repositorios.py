@@ -14,3 +14,11 @@ class PartnerRequestRepository(Repositorio, ABC):
     @abstractmethod
     def agregar(self, entity: PartnerRequest):
         ...
+
+    @abstractmethod
+    def actualizar(self, entity: PartnerRequest) -> None:
+        ...
+
+    @abstractmethod
+    def eliminar(self, id: UUID) -> bool:
+        ...

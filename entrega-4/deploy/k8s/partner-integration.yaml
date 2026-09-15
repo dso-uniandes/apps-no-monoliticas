@@ -24,7 +24,11 @@ spec:
               name: http
           env:
             - name: MESSAGING_ENABLED
-              value: "false"
+              value: "true"
+            - name: PULSAR_URL
+              value: pulsar://pulsar:6650
+            - name: EVALUATE_PARTNER_RULES_TOPIC
+              value: persistent://public/default/hda-evaluate-partner-rules-v1
             - name: PERSISTENCE_BACKEND
               value: sqlite
             - name: DATABASE_URL
@@ -63,7 +67,7 @@ metadata:
   name: partner-integration
   namespace: hda
 spec:
-  type: ClusterIP
+  type: LoadBalancer
   selector:
     app: partner-integration
   ports:

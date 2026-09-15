@@ -1,113 +1,133 @@
 # Entrega 4 - POC de arquitectura Hogar de los Alpes
 
-Esta carpeta contiene la prueba de concepto parcial para una arquitectura de microservicios orientada a eventos, desarrollada en Python y desplegable localmente con Docker Compose o en GCP con Terraform + Kubernetes.
+POC de microservicios orientados a eventos en Python. Local con Docker Compose;
+GCP con Terraform + GKE + Cloud SQL + Artifact Registry. Broker: Apache Pulsar.
 
-La implementacion continua la linea definida en Entrega 3: Work Orchestration como capacidad central, CQS para escritura/lectura, arquitectura hexagonal, PostgreSQL para persistencia operacional y Published Language para eventos de trabajo. La diferencia principal es tecnologica y de alcance: Entrega 3 proponia RabbitMQ para la POC inicial, mientras que Entrega 4 exige Apache Pulsar y al menos 4 microservicios.
+## Alcance
 
-## Alcance de la entrega parcial
-
-La POC cubre los puntos esperados para Entrega 4:
-
-| Requisito | Evidencia en el repo |
+| Requisito | Evidencia |
 |---|---|
-| 4 microservicios en Python | `partner-integration`, `partner-rules`, `work-orchestration`, `provider-matching` |
-| Comunicacion por comandos y eventos | Comandos en `src/*/aplicacion/comandos`, handlers en `src/*/aplicacion/handlers`, eventos de dominio y evento de integracion `WorkCreatedV1` |
-| Broker Apache Pulsar | `docker-compose.yml`, `deploy/k8s/pulsar.yaml`, publicador y consumidor Pulsar |
-| Esquema de eventos y evolucion | Avro con `published_language/v1/work_created.py` y `published_language/v2/work_created.py`; topic `hda-work-created-v1` y version en `schema_version` |
-| Almacenamiento CRUD descentralizado | PostgreSQL para `work-orchestration`; SQLite propia para `partner-integration`, `partner-rules` y `provider-matching` |
-| Despliegue | Docker Compose local y Terraform + GKE + Cloud SQL + Artifact Registry |
-| Verificacion funcional | Docker Compose, health checks, POST `/works`, logs de publicacion/consumo y verificacion de persistencia |
+| 4 microservicios | `partner-integration`, `partner-rules`, `work-orchestration`, `provider-matching` |
+| Commands + Events | Comandos locales + contratos Avro en Pulsar |
+| Apache Pulsar | Compose + `deploy/k8s/pulsar.yaml` |
+| Published Language | `EvaluatePartnerRulesV1`, `PartnerRulesEvaluatedV1`, `WorkCreatedV1/V2` |
+| CRUD descentralizado | PI/PR/PM: SQLite; WO: PostgreSQL |
+| Despliegue | Docker Compose y Terraform/GKE |
 
-## Escenarios de calidad validados
+## Flujo asíncrono
 
-Estos escenarios vienen de Entrega 3 y corresponden a los tres elegidos por el equipo para la entrega parcial:
+```
+Partner externo
+      |
+      | POST /partner-requests
+      v
+Partner Integration (ACL)
+      |
+      | EvaluatePartnerRulesV1 [COMMAND]
+      v
+Apache Pulsar
+      |
+      v
+Partner Rules
+      |
+      | PartnerRulesEvaluatedV1 [INTEGRATION EVENT]
+      v
+Apache Pulsar
+      |
+      v
+Work Orchestration
+      |
+      | WorkCreatedV1 [INTEGRATION EVENT]
+      v
+Apache Pulsar
+      |
+      v
+Provider Matching
+```
+
+No hay HTTP entre microservicios. Solo se comparte Published Language.
+
+Diagrama: `docs/architecture.puml`.
+
+## Experimentos de calidad
 
 | Experimento | Estado |
 |---|---|
 | Modificabilidad / Configurabilidad | COMPLETO — PASS |
-| Escalabilidad | COMPLETO — PASS con 1 y 4 consumidores |
-| Desplegabilidad / Autonomia | COMPLETO — PASS |
-
-| Atributo | Escenario de Entrega 3 | Validacion en esta POC |
-|---|---|---|
-| Escalabilidad | Pico de Provider Matching: 10.000 trabajos en cola; 95% procesados en menos de 60 s | Experimento ejecutado con 1 y 4 consumidores. Ambos procesaron 10.000 de 10.000 mensajes en 60 s. Resultado: PASS. Evidencia en `experiments/scalability/results/` |
-| Modificabilidad / Configurabilidad | Incorporar un nuevo partner B2B2C sin modificar el agregado `Work`; cambio localizado en ACL/reglas | Experimento ejecutado con `partner-demo`: cambios solo en Partner Integration y Partner Rules; Work Orchestration sin cambios. Resultado: PASS. Evidencia en `experiments/modifiability/results/` |
-| Desplegabilidad / Autonomia | Compatibilidad de evento versionado: consumidores v1 siguen operando mientras entra `WorkCreatedV2`; 0 errores de deserializacion | El consumidor V1 procesó 100/100 eventos V1 y 100/100 eventos V2, con backlog final 0, cero errores y sin cambios en su checksum. Resultado: PASS |
-
-### Modificabilidad / Configurabilidad
-
-Objetivo:
-Incorporar un nuevo partner B2B2C sin modificar Work Orchestration.
-
-Resultado experimental:
-
-- Bounded Contexts modificados: 2
-- Cambios en Work Orchestration: 0
-- partner-demo soportado: Si
-- Normalizacion: exitosa
-- Reglas: exitosas
-- Resultado: PASS
+| Escalabilidad | COMPLETO — PASS |
+| Desplegabilidad / Autonomía | COMPLETO — PASS |
 
 Evidencia:
 
-`experiments/modifiability/results/`
+- `experiments/modifiability/results/`
+- `experiments/scalability/results/`
+- `experiments/deployability/results/`
 
-Ejecucion:
+### Desplegabilidad
+
+Productor V1 y productor V2 publican al mismo topic `hda-work-created-v1`.
+El consumidor V1 de Provider Matching procesa ambos sin cambios de código.
+V2 agrega `region` y `priority` con defaults Avro; el broker usa estrategia
+`FULL` (compatible hacia adelante y hacia atrás).
+
+Criterios: 100 V1 + 100 V2 procesados, backlog 0, 0 errores de deserialización,
+checksum del consumidor sin cambios.
 
 ```bash
 cd entrega-4
-PYTHONPATH=src python experiments/modifiability/run_experiment.py
+bash experiments/deployability/run_experiment.sh
 ```
 
 ## Microservicios
 
-| Servicio | Responsabilidad | Puerto local |
+| Servicio | Rol | Puerto |
 |---|---|---|
-| Partner Integration | BFF / capa anticorrupcion para normalizar solicitudes externas | 8001 |
-| Partner Rules | Evalua reglas de partners | 8002 |
-| Work Orchestration | Recibe `CreateWork`, persiste el agregado y publica `WorkCreatedV1` | 8003 |
-| Provider Matching | Consume `WorkCreatedV1` y procesa el matching de proveedor | 8004 |
+| Partner Integration | ACL B2B2C: normaliza payload externo y publica el command | 8001 |
+| Partner Rules | Evalúa reglas del partner y publica el resultado | 8002 |
+| Work Orchestration | Crea Work si `allowed`, publica `WorkCreatedV1` | 8003 |
+| Provider Matching | Consume `WorkCreatedV1` y ejecuta matching | 8004 |
 
-## Evento publicado
+Partner Integration **no** es BFF: es Anti-Corruption Layer.
 
-Se usa un **evento de integracion con carga de estado** (`WorkCreatedV1`) porque el consumidor no debe depender del modelo interno del agregado `Work`. El evento incluye los datos minimos para que `provider-matching` procese el comando local `ProcessMatching`.
+## Published Language
 
-Tecnologia elegida: **Avro sobre Apache Pulsar**, por compatibilidad nativa con `pulsar-client[avro]`, validacion de schema y evolucion versionada. La convencion actual es:
+| Contrato | Tipo | Uso |
+|---|---|---|
+| `EvaluatePartnerRulesV1` | COMMAND | PI → PR |
+| `PartnerRulesEvaluatedV1` | INTEGRATION EVENT | PR → WO |
+| `WorkCreatedV1` / `WorkCreatedV2` | INTEGRATION EVENT | WO → PM (evolución compatible) |
 
-- Clase de contrato v1: `src/published_language/v1/work_created.py`
-- Clase de contrato v2 compatible: `src/published_language/v2/work_created.py`
-- Topic: `persistent://public/default/hda-work-created-v1`
-- Campo de version: `schema_version='1'`
-- Estrategia de evolucion: cambios compatibles agregan campos con default en `v2`; cambios incompatibles deben publicarse en un topic nuevo como `hda-work-created-v2`.
+Los contratos están versionados, no exponen el modelo interno de cada BC y desacoplan productores/consumidores.
 
-## Almacenamiento
+## Persistencia (CRUD)
 
-La topologia es **descentralizada** para la POC local:
+Topología **descentralizada**: cada MS es dueño de sus datos. Ninguno lee tablas de otro.
 
-- Cada microservicio conserva su repositorio y su modelo de dominio.
-- `work-orchestration` usa CRUD con PostgreSQL local o Cloud SQL en GCP.
-- `partner-integration` y `provider-matching` usan SQLite propia con repositorios simples basados en `sqlite3` cuando corren en Docker Compose o Kubernetes.
-- `partner-rules` usa SQLite propia y conserva el repositorio in-memory para pruebas rápidas.
-- Los repositorios in-memory siguen disponibles solo para pruebas unitarias y ejecuciones rapidas sin infraestructura.
+| MS | Motor | Operaciones en repository |
+|---|---|---|
+| Partner Integration | SQLite | agregar, obtener_por_id, actualizar, eliminar |
+| Partner Rules | SQLite | agregar, obtener_por_id, actualizar, eliminar, obtener_por_partner |
+| Work Orchestration | PostgreSQL | agregar, obtener_por_id, actualizar, eliminar |
+| Provider Matching | SQLite | agregar, obtener_por_id, actualizar, eliminar |
 
-No se implementa Event Sourcing en la entrega parcial porque el escenario validado requiere trazabilidad del evento de integracion y persistencia operacional basica, no reconstruccion completa por stream de eventos.
+SQLite aquí es decisión de POC, no de producción.
 
 ## Ejecutar localmente
 
 ```bash
 cd entrega-4
-docker compose up --build
+docker compose up --build -d
 ```
 
-Crear un work:
+Entrada del flujo completo:
 
 ```bash
-curl -X POST http://localhost:8003/works \
+curl -X POST http://localhost:8001/partner-requests \
   -H "Content-Type: application/json" \
-  -d '{"partner_id":"partner-1","external_reference":"ext-100","location":{"city":"Bogota","country":"CO"}}'
+  -d '{"partner_id":"partner-demo","payload":{"reference":"EXT-LOCAL-001","municipality":"Bogota","country_code":"CO","service_type":"HOME_REPAIR"}}'
 ```
 
-Verificar health checks:
+Health:
 
 ```bash
 curl http://localhost:8001/health
@@ -116,87 +136,95 @@ curl http://localhost:8003/health
 curl http://localhost:8004/health
 ```
 
-Verificar flujo asincrono:
+Logs esperados:
 
 ```bash
+docker logs partner-integration | grep 'EvaluatePartnerRulesV1 published'
+docker logs partner-rules | grep 'EvaluatePartnerRulesV1 received'
+docker logs partner-rules | grep 'PartnerRulesEvaluatedV1 published'
+docker logs work-orchestration | grep 'PartnerRulesEvaluatedV1 received'
 docker logs work-orchestration | grep 'WorkCreatedV1 published'
-docker logs provider-matching | grep 'WorkCreatedV1 received'
 docker logs provider-matching | grep 'Matching processed'
 ```
 
-Verificar BD descentralizada local:
-
-```bash
-docker compose exec partner-integration ls -l /data
-docker compose exec provider-matching ls -l /data
-```
-
-Apagar:
+Apagar (conserva volúmenes):
 
 ```bash
 docker compose down
 ```
 
-## Verificacion pendiente para el equipo
+## Despliegue en GCP
 
-La POC se puede verificar manualmente con Docker Compose usando los comandos anteriores. Queda como actividad separada del equipo agregar pruebas automatizadas con `pytest` para handlers, contratos de eventos, repositorios y API.
+Proyecto: `alpine-land-507822-t7`.
 
-Los tres experimentos están completos (PASS). El experimento de desplegabilidad puede repetirse con Docker mediante:
+**Estado: PASS** — E2E en GKE (`ext-gcp-1789426682`): PI → PR → WO → PM
+(`EvaluatePartnerRulesV1` → `PartnerRulesEvaluatedV1` → `WorkCreatedV1` → Matching).
 
-```bash
-bash experiments/deployability/run_experiment.sh
-```
-
-Base sugerida para quien tome esa actividad:
+### Desplegar (si aún no está en el cluster)
 
 ```bash
 cd entrega-4
-python3 -m venv .venv
-. .venv/bin/activate
-pip install -r hda-requirements.txt pytest httpx
-pytest
-```
-
-## Despliegue en GCP
-
-Requisitos: `gcloud`, `terraform`, `docker`, `kubectl`, `make`, bash.
-
-```bash
 gcloud auth login
 gcloud auth application-default login
-gcloud config set project <PROJECT_ID>
-export PROJECT_ID=<PROJECT_ID>
+gcloud config set project alpine-land-507822-t7
+export PROJECT_ID=alpine-land-507822-t7
+export IMAGE_TAG=$(git rev-parse --short HEAD)-$(date +%Y%m%d%H%M)
 
-make bootstrap
-make infra
 make build
 make deploy
-make verify
 ```
 
-El despliegue crea Artifact Registry, red privada, GKE, Cloud SQL y manifiestos Kubernetes. Pulsar se despliega standalone en GKE con `emptyDir` como simplificacion de POC.
+### Prueba E2E en GCP (replicar)
 
-Destruir recursos:
+Con el cluster ya desplegado, validar el flujo asíncrono completo:
 
 ```bash
-CONFIRM_DESTROY=yes make destroy
+cd entrega-4
+gcloud container clusters get-credentials hda-poc \
+  --zone us-central1-a \
+  --project alpine-land-507822-t7
+
+# Opción recomendada (script automatizado):
+make verify
+# equivale a: bash scripts/verify-gcp.sh
 ```
 
-## Actividades por miembro
+Qué hace `make verify` / `scripts/verify-gcp.sh`:
 
-Completar antes de entregar con nombres reales y evidencia de commits/PRs:
+1. Obtiene la External IP del LoadBalancer de `partner-integration`.
+2. `GET /health` → debe responder `{"service":"partner-integration","status":"ok"}`.
+3. `POST /partner-requests` con un `reference` único (`ext-gcp-<timestamp>`).
+4. Espera el flujo async y comprueba en logs:
 
-| Miembro | Actividades | Evidencia |
+| Paso | Servicio | Log esperado |
 |---|---|---|
-| Integrante 1 | Definicion de microservicios, comandos y dominio | Commits/PRs |
-| Integrante 2 | Pulsar, published language y consumidores | Commits/PRs |
-| Integrante 3 | Persistencia, Docker Compose y pruebas | Commits/PRs |
-| Integrante 4 | Terraform, Kubernetes, documentacion y verificacion | Commits/PRs |
+| 1 | Partner Integration | `EvaluatePartnerRulesV1 published: <REF>` |
+| 2 | Partner Rules | `EvaluatePartnerRulesV1 received: <REF>` |
+| 3 | Partner Rules | `PartnerRulesEvaluatedV1 published: <REF>` |
+| 4 | Work Orchestration | `PartnerRulesEvaluatedV1 received: <REF>` |
+| 5 | Work Orchestration | `Work persisted` + `WorkCreatedV1 published` |
+| 6 | Provider Matching | `WorkCreatedV1 received` + `Matching processed` |
 
-## Sustentacion rapida
+### Prueba E2E manual (sin script)
 
-- La arquitectura es event-driven: `CreateWork` persiste el agregado y publica `WorkCreatedV1`.
-- Pulsar desacopla productor y consumidor; `provider-matching` puede escalar por suscripcion `Shared`.
-- El contrato publicado esta versionado en `published_language/v1` y `published_language/v2`; no se expone el evento de dominio interno.
-- La persistencia se mantiene por servicio: `work-orchestration` usa PostgreSQL y los otros tres microservicios usan bases SQLite independientes.
-- `make verify` prueba health, creacion de work, publicacion/consumo del evento y persistencia tras reiniciar el deployment.
+```bash
+# External IP de Partner Integration
+EXTERNAL_IP=$(kubectl -n hda get svc partner-integration \
+  -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+curl -fsS "http://${EXTERNAL_IP}/health"
+
+REF="ext-gcp-$(date +%s)"
+curl -fsS -X POST "http://${EXTERNAL_IP}/partner-requests" \
+  -H "Content-Type: application/json" \
+  -d "{\"partner_id\":\"partner-demo\",\"payload\":{\"reference\":\"${REF}\",\"municipality\":\"Bogota\",\"country_code\":\"CO\",\"service_type\":\"HOME_REPAIR\"}}"
+
+# Esperar ~12s y revisar logs del flujo PI → PR → WO → PM
+sleep 12
+kubectl -n hda logs deploy/partner-integration --tail=80 | grep "EvaluatePartnerRulesV1 published"
+kubectl -n hda logs deploy/partner-rules --tail=80 | grep -E "EvaluatePartnerRulesV1 received|PartnerRulesEvaluatedV1 published"
+kubectl -n hda logs deploy/work-orchestration -c work-orchestration --tail=80 | grep -E "PartnerRulesEvaluatedV1 received|Work persisted|WorkCreatedV1 published"
+kubectl -n hda logs deploy/provider-matching --tail=80 | grep -E "WorkCreatedV1 received|Matching processed"
+```
+
+Evidencia de la corrida del equipo: referencia `ext-gcp-1789426682`, HTTP `202 accepted`, flujo PI → PR → WO → PM completo en logs.

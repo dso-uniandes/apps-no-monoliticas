@@ -13,3 +13,11 @@ class InMemoryPartnerRequestRepository(PartnerRequestRepository):
 
     def agregar(self, entity: PartnerRequest):
         self._store[entity.id] = entity
+
+    def actualizar(self, entity: PartnerRequest) -> None:
+        if entity.id not in self._store:
+            raise KeyError(f'PartnerRequest {entity.id} no existe')
+        self._store[entity.id] = entity
+
+    def eliminar(self, id: UUID) -> bool:
+        return self._store.pop(id, None) is not None

@@ -6,8 +6,8 @@
   "v2_processed_by_v1_consumer": 100,
   "final_backlog": 0,
   "deserialization_or_processing_errors": 0,
-  "consumer_checksum_before": "0725304a6f2e1c2ebff2145a47ea3eecb28fa86a2e865afbb7643b3c620e09ec",
-  "consumer_checksum_after": "0725304a6f2e1c2ebff2145a47ea3eecb28fa86a2e865afbb7643b3c620e09ec",
+  "consumer_checksum_before": "6717172e76828d5eb957fdc6b60f60e4bafbaab50fc509b8de51b758d57fc566",
+  "consumer_checksum_after": "6717172e76828d5eb957fdc6b60f60e4bafbaab50fc509b8de51b758d57fc566",
   "consumer_code_changes": 0,
   "result": "PASS"
 }

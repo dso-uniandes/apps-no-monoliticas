@@ -4,13 +4,13 @@ import pulsar
 from pulsar.schema import AvroSchema
 
 from published_language.v1.evaluate_partner_rules import EvaluatePartnerRulesV1
-from partner_integration.aplicacion.puertos.event_publisher import EventPublisher
+from partner_integration.aplicacion.puertos.command_publisher import CommandPublisher
 
 
 logger = logging.getLogger(__name__)
 
 
-class PulsarEventPublisher(EventPublisher):
+class PulsarCommandPublisher(CommandPublisher):
     def __init__(self, pulsar_url: str, topic: str, listener_name: str | None = None):
         client_kwargs = {}
         if listener_name:
@@ -21,20 +21,20 @@ class PulsarEventPublisher(EventPublisher):
             schema=AvroSchema(EvaluatePartnerRulesV1),
         )
 
-    def publish(self, evento: object) -> None:
-        if not isinstance(evento, EvaluatePartnerRulesV1):
+    def publish(self, comando: object) -> None:
+        if not isinstance(comando, EvaluatePartnerRulesV1):
             raise TypeError(
-                'PulsarEventPublisher solo publica EvaluatePartnerRulesV1, '
-                f'recibido: {type(evento).__name__}'
+                'PulsarCommandPublisher solo publica EvaluatePartnerRulesV1, '
+                f'recibido: {type(comando).__name__}'
             )
 
         self._producer.send(
-            evento,
-            partition_key=evento.external_reference or '',
+            comando,
+            partition_key=comando.external_reference or '',
         )
         logger.info(
             'EvaluatePartnerRulesV1 published: %s',
-            evento.external_reference,
+            comando.external_reference,
         )
 
     def close(self) -> None:

@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 EXPERIMENT_DIR = Path(__file__).resolve().parent
 RESULTS_DIR = EXPERIMENT_DIR / 'results'
 BASELINE_FILE = EXPERIMENT_DIR / 'baseline_commit.txt'
+END_COMMIT_FILE = EXPERIMENT_DIR / 'end_commit.txt'
 
 BOUNDED_CONTEXTS = (
     'partner_integration',
@@ -51,14 +52,31 @@ def _load_baseline_commit() -> str:
     return BASELINE_FILE.read_text(encoding='utf-8').strip()
 
 
-def _changed_files(baseline: str) -> list[str]:
+def _load_end_commit() -> str | None:
+    if not END_COMMIT_FILE.exists():
+        return None
+    value = END_COMMIT_FILE.read_text(encoding='utf-8').strip()
+    return value or None
+
+
+def _changed_files(baseline: str, end_commit: str | None = None) -> list[str]:
+    # Si hay end_commit, mide el rango histórico del experimento (no el working tree
+    # contaminado por trabajo posterior de la entrega).
+    if end_commit:
+        tracked = _run_git('diff', '--name-only', f'{baseline}..{end_commit}')
+        files = [
+            line.replace('\\', '/')
+            for line in tracked.splitlines()
+            if line.strip()
+        ]
+        return files
+
     tracked = _run_git('diff', '--name-only', baseline)
     untracked = _run_git('ls-files', '--others', '--exclude-standard')
     files: list[str] = []
     for block in (tracked, untracked):
         if block:
             files.extend(line.replace('\\', '/') for line in block.splitlines() if line.strip())
-    # Deduplicate preserving order
     seen: set[str] = set()
     ordered: list[str] = []
     for path in files:
@@ -174,9 +192,10 @@ def _write_summary(
 def main() -> int:
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     baseline = _load_baseline_commit()
+    end_commit = _load_end_commit()
     functional = _run_functional_checks()
 
-    changed_files = _changed_files(baseline)
+    changed_files = _changed_files(baseline, end_commit)
     (RESULTS_DIR / 'changed-files.txt').write_text(
         '\n'.join(changed_files) + ('\n' if changed_files else ''),
         encoding='utf-8',

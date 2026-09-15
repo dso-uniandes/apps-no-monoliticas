@@ -57,6 +57,38 @@ class SQLitePartnerRuleRepository(PartnerRuleRepository):
                     ),
                 )
 
+    def actualizar(self, entity: PartnerRule) -> None:
+        with closing(sqlite3.connect(self._db_path)) as connection:
+            with connection:
+                cursor = connection.execute(
+                    '''
+                    UPDATE partner_rules
+                    SET partner_id = ?, rule_type = ?, value = ?, enabled = ?,
+                        fecha_creacion = ?, fecha_actualizacion = ?
+                    WHERE id = ?
+                    ''',
+                    (
+                        entity.partner_id.valor,
+                        entity.rule_type.valor,
+                        entity.value.valor,
+                        int(entity.enabled),
+                        entity.fecha_creacion.isoformat(),
+                        entity.fecha_actualizacion.isoformat(),
+                        str(entity.id),
+                    ),
+                )
+                if cursor.rowcount == 0:
+                    raise KeyError(f'PartnerRule {entity.id} no existe')
+
+    def eliminar(self, id: UUID) -> bool:
+        with closing(sqlite3.connect(self._db_path)) as connection:
+            with connection:
+                cursor = connection.execute(
+                    'DELETE FROM partner_rules WHERE id = ?',
+                    (str(id),),
+                )
+                return cursor.rowcount > 0
+
     @staticmethod
     def _to_entity(row: sqlite3.Row) -> PartnerRule:
         return PartnerRule(

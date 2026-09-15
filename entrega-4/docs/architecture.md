@@ -1,41 +1,40 @@
 # Arquitectura POC - Entrega 4
 
-El diagrama fuente esta en `docs/architecture.puml`.
+Fuente: `docs/architecture.puml`.
 
 ```plantuml
 @startuml
 left to right direction
 skinparam componentStyle rectangle
 
-actor "Partner externo / UI" as Partner
+actor "Partner externo B2B2C" as Partner
 
 package "Hogar de los Alpes POC" {
-  [Partner Integration\nBFF / anti-corruption layer] as PI
-  [Partner Rules\nreglas de elegibilidad] as PR
-  [Work Orchestration\nagregado Work + API] as WO
+  [Partner Integration\nACL / anti-corruption layer] as PI
+  [Partner Rules\nreglas de partner] as PR
+  [Work Orchestration\nagregado Work] as WO
   [Provider Matching\nasignacion de proveedor] as PM
 }
 
-queue "Apache Pulsar\npersistent://public/default/hda-work-created-v1\nAvro WorkCreatedV1" as Pulsar
-database "PostgreSQL / Cloud SQL\nwork-orchestration" as DB
+queue "Apache Pulsar" as Pulsar
 database "SQLite\npartner-integration" as PIDB
+database "SQLite\npartner-rules" as PRDB
+database "PostgreSQL / Cloud SQL\nwork-orchestration" as DB
 database "SQLite\nprovider-matching" as PMDB
 cloud "GKE + Artifact Registry\nTerraform + Kubernetes" as GCP
 
-Partner --> PI : comando normalize partner request
-Partner --> WO : comando CreateWork / query GetWork
-PI --> PR : comando EvaluatePartnerRules
+Partner --> PI : POST /partner-requests
 PI --> PIDB : CRUD
-note bottom of PR
-  Pendiente para otro miembro:
-  persistencia propia y evidencia
-  del escenario de modificabilidad.
-end note
+PI --> Pulsar : COMMAND\nEvaluatePartnerRulesV1
+Pulsar --> PR : subscription hda-partner-rules-v1
+PR --> PRDB : CRUD
+PR --> Pulsar : EVENT\nPartnerRulesEvaluatedV1
+Pulsar --> WO : subscription hda-work-orchestration-v1
 WO --> DB : CRUD
-WO --> Pulsar : evento de integracion\nWorkCreatedV1
-Pulsar --> PM : suscripcion shared\nhda-provider-matching-v1
-PM --> PM : comando ProcessMatching
+WO --> Pulsar : EVENT\nWorkCreatedV1 (+ evolucion V2)
+Pulsar --> PM : subscription Shared\nhda-provider-matching-v1
 PM --> PMDB : CRUD
+PM --> PM : ProcessMatching
 
 GCP .. PI
 GCP .. PR

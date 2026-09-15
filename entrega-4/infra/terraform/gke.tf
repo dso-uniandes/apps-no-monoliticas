@@ -8,8 +8,9 @@ resource "google_container_cluster" "hda" {
 
   remove_default_node_pool = true
   initial_node_count       = 1
+  deletion_protection      = false
 
-  deletion_protection = false
+  min_master_version = "1.34.9-gke.1655001"
 
   ip_allocation_policy {
     cluster_secondary_range_name  = "pods"
@@ -21,7 +22,7 @@ resource "google_container_cluster" "hda" {
   }
 
   release_channel {
-    channel = "REGULAR"
+    channel = "STABLE"
   }
 
   depends_on = [
@@ -36,10 +37,7 @@ resource "google_container_node_pool" "primary" {
   cluster  = google_container_cluster.hda.name
   project  = var.project_id
 
-  autoscaling {
-    min_node_count = var.gke_min_node_count
-    max_node_count = var.gke_max_node_count
-  }
+  node_count = var.gke_min_node_count
 
   node_config {
     machine_type = var.gke_machine_type

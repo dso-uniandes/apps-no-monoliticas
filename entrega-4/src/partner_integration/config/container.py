@@ -1,32 +1,34 @@
 from partner_integration.aplicacion.handlers.normalize_partner_request import (
     NormalizePartnerRequestHandler,
 )
-from partner_integration.aplicacion.puertos.event_publisher import EventPublisher
+from partner_integration.aplicacion.puertos.command_publisher import CommandPublisher
 from partner_integration.config.settings import settings
 from partner_integration.dominio.repositorios import PartnerRequestRepository
 from partner_integration.infraestructura.adapters.registry import get_payload_adapters
-from partner_integration.infraestructura.mensajeria.noop_event_publisher import NoOpEventPublisher
+from partner_integration.infraestructura.mensajeria.noop_command_publisher import (
+    NoOpCommandPublisher,
+)
 from partner_integration.infraestructura.persistencia.in_memory_partner_request_repository import (
     InMemoryPartnerRequestRepository,
 )
 
 _partner_request_repository: PartnerRequestRepository | None = None
-_event_publisher: EventPublisher | None = None
+_command_publisher: CommandPublisher | None = None
 
 
-def _build_event_publisher() -> EventPublisher:
+def _build_command_publisher() -> CommandPublisher:
     if settings.MESSAGING_ENABLED:
-        from partner_integration.infraestructura.mensajeria.pulsar_event_publisher import (
-            PulsarEventPublisher,
+        from partner_integration.infraestructura.mensajeria.pulsar_command_publisher import (
+            PulsarCommandPublisher,
         )
 
         listener_name = settings.PULSAR_LISTENER_NAME.strip() or None
-        return PulsarEventPublisher(
+        return PulsarCommandPublisher(
             pulsar_url=settings.PULSAR_URL,
             topic=settings.EVALUATE_PARTNER_RULES_TOPIC,
             listener_name=listener_name,
         )
-    return NoOpEventPublisher()
+    return NoOpCommandPublisher()
 
 
 def get_partner_request_repository() -> PartnerRequestRepository:
@@ -46,26 +48,26 @@ def get_partner_request_repository() -> PartnerRequestRepository:
     return _partner_request_repository
 
 
-def get_event_publisher() -> EventPublisher:
-    global _event_publisher
-    if _event_publisher is None:
-        _event_publisher = _build_event_publisher()
-    return _event_publisher
+def get_command_publisher() -> CommandPublisher:
+    global _command_publisher
+    if _command_publisher is None:
+        _command_publisher = _build_command_publisher()
+    return _command_publisher
 
 
 def get_normalize_partner_request_handler() -> NormalizePartnerRequestHandler:
     return NormalizePartnerRequestHandler(
         repositorio=get_partner_request_repository(),
-        event_publisher=get_event_publisher(),
+        command_publisher=get_command_publisher(),
         payload_adapters=get_payload_adapters(),
     )
 
 
 def shutdown_messaging() -> None:
-    global _event_publisher
-    if _event_publisher is not None:
-        _event_publisher.close()
-        _event_publisher = None
+    global _command_publisher
+    if _command_publisher is not None:
+        _command_publisher.close()
+        _command_publisher = None
 
 
 def shutdown_persistence() -> None:

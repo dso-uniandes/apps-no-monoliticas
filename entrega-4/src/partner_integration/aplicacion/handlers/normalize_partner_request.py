@@ -5,7 +5,7 @@ from seedwork.aplicacion.comandos import ComandoHandler
 
 from published_language.v1.evaluate_partner_rules import EvaluatePartnerRulesV1
 from partner_integration.aplicacion.comandos.normalize_partner_request import NormalizePartnerRequest
-from partner_integration.aplicacion.puertos.event_publisher import EventPublisher
+from partner_integration.aplicacion.puertos.command_publisher import CommandPublisher
 from partner_integration.aplicacion.puertos.payload_adapter import PartnerPayloadAdapter
 from partner_integration.dominio.entidades import PartnerRequest
 from partner_integration.dominio.excepciones import PartnerRequestInvalido
@@ -16,11 +16,11 @@ class NormalizePartnerRequestHandler(ComandoHandler):
     def __init__(
         self,
         repositorio: PartnerRequestRepository,
-        event_publisher: EventPublisher,
+        command_publisher: CommandPublisher,
         payload_adapters: dict[str, PartnerPayloadAdapter] | None = None,
     ):
         self._repositorio = repositorio
-        self._event_publisher = event_publisher
+        self._command_publisher = command_publisher
         self._payload_adapters = payload_adapters or {}
 
     def handle(self, comando: NormalizePartnerRequest) -> PartnerRequest:
@@ -59,7 +59,7 @@ class NormalizePartnerRequestHandler(ComandoHandler):
             country=str(data.get('country') or ''),
             service_type=str(data.get('service_type') or ''),
         )
-        self._event_publisher.publish(evaluate_command)
+        self._command_publisher.publish(evaluate_command)
         partner_request.limpiar_eventos()
 
         return partner_request

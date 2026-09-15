@@ -13,3 +13,11 @@ class InMemoryWorkRepository(WorkRepository):
 
     def agregar(self, entity: Work):
         self._store[entity.id] = entity
+
+    def actualizar(self, entity: Work) -> None:
+        if entity.id not in self._store:
+            raise KeyError(f'Work {entity.id} no existe')
+        self._store[entity.id] = entity
+
+    def eliminar(self, id: UUID) -> bool:
+        return self._store.pop(id, None) is not None

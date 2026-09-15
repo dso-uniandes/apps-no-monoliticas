@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 
 
-class EventPublisher(ABC):
+class CommandPublisher(ABC):
     @abstractmethod
-    def publish(self, evento: object) -> None:
+    def publish(self, comando: object) -> None:
         ...
 
     def close(self) -> None:

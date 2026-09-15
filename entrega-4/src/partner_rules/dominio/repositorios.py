@@ -16,5 +16,13 @@ class PartnerRuleRepository(Repositorio, ABC):
         ...
 
     @abstractmethod
+    def actualizar(self, entity: PartnerRule) -> None:
+        ...
+
+    @abstractmethod
+    def eliminar(self, id: UUID) -> bool:
+        ...
+
+    @abstractmethod
     def obtener_por_partner(self, partner_id: str) -> list[PartnerRule]:
         ...

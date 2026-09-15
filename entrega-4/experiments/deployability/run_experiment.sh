@@ -10,10 +10,18 @@ if ! [[ "${MESSAGES}" =~ ^[1-9][0-9]*$ ]]; then
   exit 2
 fi
 
+cd "${ROOT_DIR}"
+
+if HOST_ROOT="$(pwd -W 2>/dev/null)"; then
+  :
+else
+  HOST_ROOT="${ROOT_DIR}"
+fi
+
 RUN_ID="$(date -u +%Y%m%d%H%M%S)"
 export EXPERIMENT_TOPIC="persistent://public/default/hda-work-created-compat-${RUN_ID}"
 export EXPERIMENT_SUBSCRIPTION="hda-provider-matching-v1-compat-${RUN_ID}"
-COMPOSE=(docker compose -p hda-deployability -f "${ROOT_DIR}/docker-compose.yml" -f "${EXPERIMENT_DIR}/docker-compose.deployability.yml")
+COMPOSE=(docker compose -p hda-deployability -f docker-compose.yml -f experiments/deployability/docker-compose.deployability.yml)
 RESULTS_DIR="${EXPERIMENT_DIR}/results"
 LOG_FILE="${RESULTS_DIR}/provider-matching.log"
 RESULT_FILE="${RESULTS_DIR}/results.json"
@@ -27,7 +35,18 @@ mkdir -p "${RESULTS_DIR}"
 cleanup
 trap cleanup EXIT
 
-CONSUMER_CHECKSUM_BEFORE="$(shasum -a 256 "${CONSUMER_FILE}" | awk '{print $1}')"
+# Portable SHA-256 (macOS shasum / Linux sha256sum / openssl fallback for Git Bash on Windows).
+sha256_file() {
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$1" | awk '{print $1}'
+  elif command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1" | awk '{print $1}'
+  else
+    openssl dgst -sha256 "$1" | awk '{print $NF}'
+  fi
+}
+
+CONSUMER_CHECKSUM_BEFORE="$(sha256_file "${CONSUMER_FILE}")"
 
 "${COMPOSE[@]}" build provider-matching
 "${COMPOSE[@]}" up -d --wait zookeeper bookie broker
@@ -46,8 +65,9 @@ done
 
 publish_version() {
   local version="$1"
-  "${COMPOSE[@]}" run --rm --no-deps \
-    -v "${ROOT_DIR}:/workspace:ro" \
+  # Keep /workspace from being rewritten to a Git install path on Windows.
+  MSYS_NO_PATHCONV=1 "${COMPOSE[@]}" run --rm --no-deps \
+    -v "${HOST_ROOT}:/workspace:ro" \
     -e PYTHONPATH=/workspace/src:/app \
     provider-matching \
     python /workspace/experiments/deployability/publish_work_created.py \
@@ -66,7 +86,7 @@ python3 "${EXPERIMENT_DIR}/wait_for_backlog.py" \
 
 # Capture the consumer output after both schema revisions have been handled.
 "${COMPOSE[@]}" logs --no-color provider-matching > "${LOG_FILE}"
-CONSUMER_CHECKSUM_AFTER="$(shasum -a 256 "${CONSUMER_FILE}" | awk '{print $1}')"
+CONSUMER_CHECKSUM_AFTER="$(sha256_file "${CONSUMER_FILE}")"
 
 python3 "${EXPERIMENT_DIR}/collect_result.py" \
   --topic-name "${EXPERIMENT_TOPIC##*/}" \

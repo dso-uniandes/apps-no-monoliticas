@@ -52,6 +52,34 @@ class SQLiteMatchingRepository(MatchingRepository):
             )
             connection.commit()
 
+    def actualizar(self, entity: Matching) -> None:
+        with sqlite3.connect(self._db_path) as connection:
+            cursor = connection.execute(
+                '''
+                UPDATE matchings
+                SET work_id = ?, status = ?, provider_id = ?
+                WHERE id = ?
+                ''',
+                (
+                    entity.work_id.valor,
+                    entity.status.valor,
+                    entity.provider_id.valor if entity.provider_id else None,
+                    str(entity.id),
+                ),
+            )
+            connection.commit()
+            if cursor.rowcount == 0:
+                raise KeyError(f'Matching {entity.id} no existe')
+
+    def eliminar(self, id: UUID) -> bool:
+        with sqlite3.connect(self._db_path) as connection:
+            cursor = connection.execute(
+                'DELETE FROM matchings WHERE id = ?',
+                (str(id),),
+            )
+            connection.commit()
+            return cursor.rowcount > 0
+
     def _create_table(self) -> None:
         with sqlite3.connect(self._db_path) as connection:
             connection.execute(

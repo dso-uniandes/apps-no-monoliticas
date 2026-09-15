@@ -14,3 +14,11 @@ class WorkRepository(Repositorio, ABC):
     @abstractmethod
     def agregar(self, entity: Work):
         ...
+
+    @abstractmethod
+    def actualizar(self, entity: Work) -> None:
+        ...
+
+    @abstractmethod
+    def eliminar(self, id: UUID) -> bool:
+        ...

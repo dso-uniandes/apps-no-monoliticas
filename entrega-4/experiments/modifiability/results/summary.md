@@ -6,4 +6,4 @@
 
 Resultado general: PASS
 
-El escenario de modificabilidad/configurabilidad fue validado exitosamente: la incorporación de partner-demo requirió cambios únicamente en Partner Integration y Partner Rules, sin modificar Work Orchestration.
+Conclusión: el escenario de modificabilidad fue validado; partner-demo se incorporó sin tocar Work Orchestration.

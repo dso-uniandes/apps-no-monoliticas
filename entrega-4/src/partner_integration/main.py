@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from partner_integration.api.health import router as health_router
 from partner_integration.api.partner_requests import router as partner_requests_router
 from partner_integration.config.container import (
-    get_event_publisher,
+    get_command_publisher,
     get_partner_request_repository,
     shutdown_messaging,
     shutdown_persistence,
@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     get_partner_request_repository()
-    get_event_publisher()
+    get_command_publisher()
     yield
     shutdown_messaging()
     shutdown_persistence()

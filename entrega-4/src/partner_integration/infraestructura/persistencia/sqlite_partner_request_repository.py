@@ -57,6 +57,38 @@ class SQLitePartnerRequestRepository(PartnerRequestRepository):
             )
             connection.commit()
 
+    def actualizar(self, entity: PartnerRequest) -> None:
+        with sqlite3.connect(self._db_path) as connection:
+            cursor = connection.execute(
+                '''
+                UPDATE partner_requests
+                SET partner_id = ?, external_reference = ?, payload = ?,
+                    normalized_payload = ?
+                WHERE id = ?
+                ''',
+                (
+                    entity.partner_id.valor,
+                    entity.external_reference.valor,
+                    json.dumps(entity.payload),
+                    json.dumps(entity.normalized_payload)
+                    if entity.normalized_payload is not None
+                    else None,
+                    str(entity.id),
+                ),
+            )
+            connection.commit()
+            if cursor.rowcount == 0:
+                raise KeyError(f'PartnerRequest {entity.id} no existe')
+
+    def eliminar(self, id: UUID) -> bool:
+        with sqlite3.connect(self._db_path) as connection:
+            cursor = connection.execute(
+                'DELETE FROM partner_requests WHERE id = ?',
+                (str(id),),
+            )
+            connection.commit()
+            return cursor.rowcount > 0
+
     def _create_table(self) -> None:
         with sqlite3.connect(self._db_path) as connection:
             connection.execute(
