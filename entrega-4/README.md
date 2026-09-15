@@ -14,7 +14,7 @@ La POC cubre los puntos esperados para Entrega 4:
 | Comunicacion por comandos y eventos | Comandos en `src/*/aplicacion/comandos`, handlers en `src/*/aplicacion/handlers`, eventos de dominio y evento de integracion `WorkCreatedV1` |
 | Broker Apache Pulsar | `docker-compose.yml`, `deploy/k8s/pulsar.yaml`, publicador y consumidor Pulsar |
 | Esquema de eventos y evolucion | Avro con `published_language/v1/work_created.py` y `published_language/v2/work_created.py`; topic `hda-work-created-v1` y version en `schema_version` |
-| Almacenamiento CRUD descentralizado | PostgreSQL para `work-orchestration`, SQLite propia para `partner-integration` y `provider-matching`; queda pendiente completar BD propia de `partner-rules` |
+| Almacenamiento CRUD descentralizado | PostgreSQL para `work-orchestration`; SQLite propia para `partner-integration`, `partner-rules` y `provider-matching` |
 | Despliegue | Docker Compose local y Terraform + GKE + Cloud SQL + Artifact Registry |
 | Verificacion funcional | Docker Compose, health checks, POST `/works`, logs de publicacion/consumo y verificacion de persistencia |
 
@@ -26,13 +26,13 @@ Estos escenarios vienen de Entrega 3 y corresponden a los tres elegidos por el e
 |---|---|
 | Modificabilidad / Configurabilidad | COMPLETO — PASS |
 | Escalabilidad | COMPLETO — PASS con 1 y 4 consumidores |
-| Desplegabilidad / Autonomia | Preparado — pendiente ejecucion de compatibilidad |
+| Desplegabilidad / Autonomia | COMPLETO — PASS |
 
 | Atributo | Escenario de Entrega 3 | Validacion en esta POC |
 |---|---|---|
 | Escalabilidad | Pico de Provider Matching: 10.000 trabajos en cola; 95% procesados en menos de 60 s | Experimento ejecutado con 1 y 4 consumidores. Ambos procesaron 10.000 de 10.000 mensajes en 60 s. Resultado: PASS. Evidencia en `experiments/scalability/results/` |
 | Modificabilidad / Configurabilidad | Incorporar un nuevo partner B2B2C sin modificar el agregado `Work`; cambio localizado en ACL/reglas | Experimento ejecutado con `partner-demo`: cambios solo en Partner Integration y Partner Rules; Work Orchestration sin cambios. Resultado: PASS. Evidencia en `experiments/modifiability/results/` |
-| Desplegabilidad / Autonomia | Compatibilidad de evento versionado: consumidores v1 siguen operando mientras entra `WorkCreatedV2`; 0 errores de deserializacion | Base preparada: `published_language/v2` agrega campos con defaults y conserva todos los campos de `WorkCreatedV1`. Pendiente ejecutar la prueba de compatibilidad |
+| Desplegabilidad / Autonomia | Compatibilidad de evento versionado: consumidores v1 siguen operando mientras entra `WorkCreatedV2`; 0 errores de deserializacion | El consumidor V1 procesó 100/100 eventos V1 y 100/100 eventos V2, con backlog final 0, cero errores y sin cambios en su checksum. Resultado: PASS |
 
 ### Modificabilidad / Configurabilidad
 
@@ -87,7 +87,7 @@ La topologia es **descentralizada** para la POC local:
 - Cada microservicio conserva su repositorio y su modelo de dominio.
 - `work-orchestration` usa CRUD con PostgreSQL local o Cloud SQL en GCP.
 - `partner-integration` y `provider-matching` usan SQLite propia con repositorios simples basados en `sqlite3` cuando corren en Docker Compose o Kubernetes.
-- `partner-rules` conserva el esqueleto funcional con repositorio in-memory y queda como actividad separada para completar persistencia propia y evidencia de modificabilidad.
+- `partner-rules` usa SQLite propia y conserva el repositorio in-memory para pruebas rápidas.
 - Los repositorios in-memory siguen disponibles solo para pruebas unitarias y ejecuciones rapidas sin infraestructura.
 
 No se implementa Event Sourcing en la entrega parcial porque el escenario validado requiere trazabilidad del evento de integracion y persistencia operacional basica, no reconstruccion completa por stream de eventos.
@@ -141,9 +141,11 @@ docker compose down
 
 La POC se puede verificar manualmente con Docker Compose usando los comandos anteriores. Queda como actividad separada del equipo agregar pruebas automatizadas con `pytest` para handlers, contratos de eventos, repositorios y API.
 
-Los experimentos de modificabilidad y escalabilidad ya estan completos (PASS). Queda pendiente de ejecucion:
+Los tres experimentos están completos (PASS). El experimento de desplegabilidad puede repetirse con Docker mediante:
 
-- Desplegabilidad / autonomia: ejecutar la prueba de compatibilidad entre consumidores v1 y `WorkCreatedV2`.
+```bash
+bash experiments/deployability/run_experiment.sh
+```
 
 Base sugerida para quien tome esa actividad:
 
@@ -196,5 +198,5 @@ Completar antes de entregar con nombres reales y evidencia de commits/PRs:
 - La arquitectura es event-driven: `CreateWork` persiste el agregado y publica `WorkCreatedV1`.
 - Pulsar desacopla productor y consumidor; `provider-matching` puede escalar por suscripcion `Shared`.
 - El contrato publicado esta versionado en `published_language/v1` y `published_language/v2`; no se expone el evento de dominio interno.
-- La persistencia se mantiene por servicio en la base tecnica; `work-orchestration`, `partner-integration` y `provider-matching` ya tienen persistencia propia, y `partner-rules` queda pendiente para otro miembro.
+- La persistencia se mantiene por servicio: `work-orchestration` usa PostgreSQL y los otros tres microservicios usan bases SQLite independientes.
 - `make verify` prueba health, creacion de work, publicacion/consumo del evento y persistencia tras reiniciar el deployment.
