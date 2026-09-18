@@ -31,6 +31,10 @@ spec:
               value: persistent://public/default/hda-work-created-v1
             - name: WORK_CREATED_SUBSCRIPTION
               value: hda-provider-matching-v1
+            - name: MATCHING_COMPLETED_TOPIC
+              value: persistent://public/default/hda-matching-completed-v1
+            - name: MATCHING_FAILED_TOPIC
+              value: persistent://public/default/hda-matching-failed-v1
             - name: PERSISTENCE_BACKEND
               value: sqlite
             - name: DATABASE_URL

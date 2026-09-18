@@ -1,6 +1,7 @@
 import json
 import sqlite3
 from pathlib import Path
+from datetime import UTC, datetime
 from uuid import UUID
 
 from partner_integration.dominio.entidades import PartnerRequest
@@ -39,21 +40,43 @@ class SQLitePartnerRequestRepository(PartnerRequestRepository):
 
     def agregar(self, entity: PartnerRequest):
         with sqlite3.connect(self._db_path) as connection:
+            columns = self._columns(connection)
+            insert_columns = [
+                'id',
+                'partner_id',
+                'external_reference',
+                'payload',
+                'normalized_payload',
+            ]
+            values = [
+                str(entity.id),
+                entity.partner_id.valor,
+                entity.external_reference.valor,
+                json.dumps(entity.payload),
+                json.dumps(entity.normalized_payload)
+                if entity.normalized_payload is not None
+                else None,
+            ]
+
+            now = datetime.now(UTC).isoformat()
+            for audit_column in (
+                'fecha_creacion',
+                'fecha_actualizacion',
+                'created_at',
+                'updated_at',
+            ):
+                if audit_column in columns:
+                    insert_columns.append(audit_column)
+                    values.append(now)
+
+            placeholders = ', '.join('?' for _ in insert_columns)
+            columns_sql = ', '.join(insert_columns)
             connection.execute(
-                '''
-                INSERT OR REPLACE INTO partner_requests (
-                    id, partner_id, external_reference, payload, normalized_payload
-                ) VALUES (?, ?, ?, ?, ?)
+                f'''
+                INSERT OR REPLACE INTO partner_requests ({columns_sql})
+                VALUES ({placeholders})
                 ''',
-                (
-                    str(entity.id),
-                    entity.partner_id.valor,
-                    entity.external_reference.valor,
-                    json.dumps(entity.payload),
-                    json.dumps(entity.normalized_payload)
-                    if entity.normalized_payload is not None
-                    else None,
-                ),
+                values,
             )
             connection.commit()
 
@@ -79,6 +102,10 @@ class SQLitePartnerRequestRepository(PartnerRequestRepository):
             connection.commit()
             if cursor.rowcount == 0:
                 raise KeyError(f'PartnerRequest {entity.id} no existe')
+
+    def _columns(self, connection: sqlite3.Connection) -> set[str]:
+        rows = connection.execute('PRAGMA table_info(partner_requests)').fetchall()
+        return {row[1] for row in rows}
 
     def eliminar(self, id: UUID) -> bool:
         with sqlite3.connect(self._db_path) as connection:

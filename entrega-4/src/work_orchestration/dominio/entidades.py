@@ -51,6 +51,14 @@ class Work(AgregacionRaiz):
         )
         return work
 
+    def cancel(self, reason: str) -> None:
+        if self.status and self.status.valor == 'CANCELLED':
+            return
+        if not reason:
+            raise WorkInvalido('reason es obligatorio para cancelar el work')
+        self.status = WorkStatus.cancelled()
+        self.fecha_actualizacion = datetime.utcnow()
+
     @classmethod
     def rehydrate(
         cls,

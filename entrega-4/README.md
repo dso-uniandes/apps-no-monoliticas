@@ -49,6 +49,32 @@ No hay HTTP entre microservicios. Solo se comparte Published Language.
 
 Diagrama: `docs/architecture.puml`.
 
+## SAGA Entrega 5
+
+La SAGA se implementa por coreografia con eventos y abarca los 4 servicios:
+
+1. `partner-integration` recibe `POST /partner-requests`, normaliza el payload y publica `EvaluatePartnerRulesV1`.
+2. `partner-rules` consume el command, evalua reglas y publica `PartnerRulesEvaluatedV1`.
+3. `work-orchestration` consume el resultado, crea el `Work`, publica `WorkCreatedV1` y escribe en el Saga Log.
+4. `provider-matching` consume `WorkCreatedV1` y publica `MatchingCompletedV1` o `MatchingFailedV1`.
+
+La compensacion ocurre en `work-orchestration`: cuando recibe `MatchingFailedV1`, cancela el `Work`, publica `WorkCancelledV1` y registra el paso en el Saga Log.
+
+Para demostrar fallo se usa una referencia externa que contenga `fail`, por ejemplo `saga-fail-001`.
+
+Consultar Saga Log:
+
+```bash
+curl http://localhost:8003/sagas/<external_reference>
+```
+
+Demo local de transaccion exitosa y compensada:
+
+```bash
+cd entrega-4
+bash scripts/demo-saga-local.sh
+```
+
 ## Experimentos de calidad
 
 | Experimento | Estado |
@@ -87,7 +113,8 @@ bash experiments/deployability/run_experiment.sh
 | Work Orchestration | Crea Work si `allowed`, publica `WorkCreatedV1` | 8003 |
 | Provider Matching | Consume `WorkCreatedV1` y ejecuta matching | 8004 |
 
-Partner Integration **no** es BFF: es Anti-Corruption Layer.
+Para Entrega 5, `partner-integration` funciona como BFF/API de entrada de la
+POC y, al mismo tiempo, como Anti-Corruption Layer para payloads B2B2C.
 
 ## Published Language
 
@@ -96,6 +123,9 @@ Partner Integration **no** es BFF: es Anti-Corruption Layer.
 | `EvaluatePartnerRulesV1` | COMMAND | PI → PR |
 | `PartnerRulesEvaluatedV1` | INTEGRATION EVENT | PR → WO |
 | `WorkCreatedV1` / `WorkCreatedV2` | INTEGRATION EVENT | WO → PM (evolución compatible) |
+| `MatchingCompletedV1` | INTEGRATION EVENT | PM → monitoreo de SAGA |
+| `MatchingFailedV1` | INTEGRATION EVENT | PM → WO para compensacion |
+| `WorkCancelledV1` | INTEGRATION EVENT | WO publica la compensacion |
 
 Los contratos están versionados, no exponen el modelo interno de cada BC y desacoplan productores/consumidores.
 
@@ -145,6 +175,20 @@ docker logs partner-rules | grep 'PartnerRulesEvaluatedV1 published'
 docker logs work-orchestration | grep 'PartnerRulesEvaluatedV1 received'
 docker logs work-orchestration | grep 'WorkCreatedV1 published'
 docker logs provider-matching | grep 'Matching processed'
+```
+
+Probar compensacion de la SAGA:
+
+```bash
+FAIL_REF="saga-fail-$(date +%s)"
+curl -X POST http://localhost:8001/partner-requests \
+  -H "Content-Type: application/json" \
+  -d "{\"partner_id\":\"partner-demo\",\"payload\":{\"reference\":\"${FAIL_REF}\",\"municipality\":\"Bogota\",\"country_code\":\"CO\",\"service_type\":\"HOME_REPAIR\"}}"
+
+sleep 12
+curl "http://localhost:8003/sagas/${FAIL_REF}"
+docker logs provider-matching | grep 'MatchingFailedV1 published'
+docker logs work-orchestration | grep 'WorkCancelledV1 published'
 ```
 
 Apagar (conserva volúmenes):

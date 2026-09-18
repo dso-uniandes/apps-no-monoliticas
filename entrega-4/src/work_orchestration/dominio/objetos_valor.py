@@ -25,3 +25,7 @@ class WorkStatus(ObjetoValor):
     @staticmethod
     def created() -> 'WorkStatus':
         return WorkStatus('CREATED')
+
+    @staticmethod
+    def cancelled() -> 'WorkStatus':
+        return WorkStatus('CANCELLED')

@@ -14,6 +14,7 @@ package "Hogar de los Alpes POC" {
   [Partner Rules\nreglas de partner] as PR
   [Work Orchestration\nagregado Work] as WO
   [Provider Matching\nasignacion de proveedor] as PM
+  [Saga Log\nestado transaccion larga] as SL
 }
 
 queue "Apache Pulsar" as Pulsar
@@ -35,6 +36,11 @@ WO --> Pulsar : EVENT\nWorkCreatedV1 (+ evolucion V2)
 Pulsar --> PM : subscription Shared\nhda-provider-matching-v1
 PM --> PMDB : CRUD
 PM --> PM : ProcessMatching
+PM --> Pulsar : EVENT\nMatchingCompletedV1\nMatchingFailedV1
+Pulsar --> WO : subscription\nhda-work-orchestration-saga-log-v1
+Pulsar --> WO : subscription\nhda-work-orchestration-compensation-v1
+WO --> Pulsar : EVENT\nWorkCancelledV1
+WO --> SL : registra pasos\ny compensaciones
 
 GCP .. PI
 GCP .. PR
@@ -42,5 +48,6 @@ GCP .. WO
 GCP .. PM
 GCP .. Pulsar
 GCP .. DB
+GCP .. SL
 @enduml
 ```

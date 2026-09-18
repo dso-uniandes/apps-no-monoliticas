@@ -42,15 +42,30 @@ spec:
               value: pulsar://pulsar:6650
             - name: WORK_CREATED_TOPIC
               value: persistent://public/default/hda-work-created-v1
+            - name: WORK_CANCELLED_TOPIC
+              value: persistent://public/default/hda-work-cancelled-v1
             - name: PARTNER_RULES_EVALUATED_TOPIC
               value: persistent://public/default/hda-partner-rules-evaluated-v1
             - name: PARTNER_RULES_EVALUATED_SUBSCRIPTION
               value: hda-work-orchestration-v1
+            - name: MATCHING_COMPLETED_TOPIC
+              value: persistent://public/default/hda-matching-completed-v1
+            - name: MATCHING_COMPLETED_SUBSCRIPTION
+              value: hda-work-orchestration-saga-log-v1
+            - name: MATCHING_FAILED_TOPIC
+              value: persistent://public/default/hda-matching-failed-v1
+            - name: MATCHING_FAILED_SUBSCRIPTION
+              value: hda-work-orchestration-compensation-v1
+            - name: SAGA_LOG_DATABASE_URL
+              value: sqlite:////data/saga_log.db
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
                   name: hda-db
                   key: database_url
+          volumeMounts:
+            - name: work-orchestration-data
+              mountPath: /data
           resources:
             requests:
               cpu: 100m
@@ -87,6 +102,9 @@ spec:
             limits:
               cpu: 200m
               memory: 128Mi
+      volumes:
+        - name: work-orchestration-data
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service

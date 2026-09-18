@@ -77,7 +77,10 @@ class WorkCreatedConsumer:
                 try:
                     evento: WorkCreatedV1 = msg.value()
                     logger.info('WorkCreatedV1 received: %s', evento.work_id)
-                    comando = ProcessMatching(work_id=evento.work_id)
+                    comando = ProcessMatching(
+                        work_id=evento.work_id,
+                        external_reference=evento.external_reference,
+                    )
                     matching = self._handler.handle(comando)
                     logger.info('Matching processed: %s', matching.id)
                     self._consumer.acknowledge(msg)

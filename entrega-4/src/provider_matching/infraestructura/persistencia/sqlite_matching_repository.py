@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
 
@@ -37,18 +38,34 @@ class SQLiteMatchingRepository(MatchingRepository):
 
     def agregar(self, entity: Matching):
         with sqlite3.connect(self._db_path) as connection:
+            columns = self._columns(connection)
+            insert_columns = ['id', 'work_id', 'status', 'provider_id']
+            values = [
+                str(entity.id),
+                entity.work_id.valor,
+                entity.status.valor,
+                entity.provider_id.valor if entity.provider_id else None,
+            ]
+
+            now = datetime.now(UTC).isoformat()
+            for audit_column in (
+                'fecha_creacion',
+                'fecha_actualizacion',
+                'created_at',
+                'updated_at',
+            ):
+                if audit_column in columns:
+                    insert_columns.append(audit_column)
+                    values.append(now)
+
+            placeholders = ', '.join('?' for _ in insert_columns)
+            columns_sql = ', '.join(insert_columns)
             connection.execute(
-                '''
-                INSERT OR REPLACE INTO matchings (
-                    id, work_id, status, provider_id
-                ) VALUES (?, ?, ?, ?)
+                f'''
+                INSERT OR REPLACE INTO matchings ({columns_sql})
+                VALUES ({placeholders})
                 ''',
-                (
-                    str(entity.id),
-                    entity.work_id.valor,
-                    entity.status.valor,
-                    entity.provider_id.valor if entity.provider_id else None,
-                ),
+                values,
             )
             connection.commit()
 
@@ -70,6 +87,10 @@ class SQLiteMatchingRepository(MatchingRepository):
             connection.commit()
             if cursor.rowcount == 0:
                 raise KeyError(f'Matching {entity.id} no existe')
+
+    def _columns(self, connection: sqlite3.Connection) -> set[str]:
+        rows = connection.execute('PRAGMA table_info(matchings)').fetchall()
+        return {row[1] for row in rows}
 
     def eliminar(self, id: UUID) -> bool:
         with sqlite3.connect(self._db_path) as connection:

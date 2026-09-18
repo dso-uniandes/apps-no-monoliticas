@@ -1,33 +1,39 @@
 import logging
 import threading
+from datetime import datetime
+from uuid import UUID
+from uuid import uuid4
 
 import pulsar
 from pulsar import ConsumerType
 from pulsar.schema import AvroSchema
 
-from published_language.v1.partner_rules_evaluated import PartnerRulesEvaluatedV1
-from work_orchestration.aplicacion.comandos.create_work import CreateWork
-from work_orchestration.aplicacion.handlers.create_work import CreateWorkHandler
+from published_language.v1.matching_failed import MatchingFailedV1
+from published_language.v1.work_cancelled import WorkCancelledV1
+from work_orchestration.aplicacion.puertos.event_publisher import EventPublisher
+from work_orchestration.dominio.repositorios import WorkRepository
 from work_orchestration.infraestructura.saga_log import SagaLog
 
 
 logger = logging.getLogger(__name__)
 
 
-class PartnerRulesEvaluatedConsumer:
+class MatchingFailedConsumer:
     def __init__(
         self,
         pulsar_url: str,
         topic: str,
         subscription: str,
-        create_work_handler: CreateWorkHandler,
+        work_repository: WorkRepository,
+        event_publisher: EventPublisher,
         saga_log: SagaLog,
         listener_name: str | None = None,
     ):
         self._pulsar_url = pulsar_url
         self._topic = topic
         self._subscription = subscription
-        self._handler = create_work_handler
+        self._repository = work_repository
+        self._event_publisher = event_publisher
         self._saga_log = saga_log
         self._listener_name = listener_name
         self._stop_event = threading.Event()
@@ -42,12 +48,12 @@ class PartnerRulesEvaluatedConsumer:
         self._stop_event.clear()
         self._thread = threading.Thread(
             target=self._run,
-            name='partner-rules-evaluated-consumer',
+            name='matching-failed-consumer',
             daemon=True,
         )
         self._thread.start()
         logger.info(
-            'Consumidor PartnerRulesEvaluatedV1 iniciado topic=%s subscription=%s',
+            'Consumidor MatchingFailedV1 iniciado topic=%s subscription=%s',
             self._topic,
             self._subscription,
         )
@@ -68,7 +74,7 @@ class PartnerRulesEvaluatedConsumer:
                 self._topic,
                 self._subscription,
                 consumer_type=ConsumerType.Shared,
-                schema=AvroSchema(PartnerRulesEvaluatedV1),
+                schema=AvroSchema(MatchingFailedV1),
             )
 
             while not self._stop_event.is_set():
@@ -78,42 +84,58 @@ class PartnerRulesEvaluatedConsumer:
                     continue
 
                 try:
-                    evento: PartnerRulesEvaluatedV1 = msg.value()
-                    logger.info(
-                        'PartnerRulesEvaluatedV1 received: %s',
-                        evento.external_reference,
-                    )
-                    self._saga_log.add_step(
-                        evento.external_reference,
-                        'PARTNER_RULES_EVALUATED',
-                        'PASSED' if evento.allowed else 'REJECTED',
-                        f'allowed={evento.allowed}',
-                    )
-                    if evento.allowed:
-                        comando = CreateWork(
-                            partner_id=evento.partner_id,
-                            external_reference=evento.external_reference,
-                            city=evento.city,
-                            country=evento.country,
-                        )
-                        work = self._handler.handle(comando)
-                        self._saga_log.add_step(
-                            evento.external_reference,
-                            'WORK_CREATED',
-                            'DONE',
-                            str(work.id),
-                        )
+                    evento: MatchingFailedV1 = msg.value()
+                    logger.info('MatchingFailedV1 received: %s', evento.work_id)
+                    self._compensate(evento)
                     self._consumer.acknowledge(msg)
                 except Exception:
-                    logger.exception('Error procesando PartnerRulesEvaluatedV1')
+                    logger.exception('Error procesando MatchingFailedV1')
                     try:
                         self._consumer.negative_acknowledge(msg)
                     except Exception:
                         logger.exception('No se pudo hacer negative_acknowledge')
         except Exception:
-            logger.exception('Fallo el loop del consumidor PartnerRulesEvaluatedV1')
+            logger.exception('Fallo el loop del consumidor MatchingFailedV1')
         finally:
             self._close_resources()
+
+    def _compensate(self, evento: MatchingFailedV1) -> None:
+        self._saga_log.add_step(
+            evento.external_reference,
+            'MATCHING_FAILED',
+            'FAILED',
+            evento.reason,
+        )
+
+        work = self._repository.obtener_por_id(UUID(evento.work_id))
+        if work is None:
+            self._saga_log.add_step(
+                evento.external_reference,
+                'WORK_COMPENSATION',
+                'SKIPPED',
+                f'Work {evento.work_id} no existe',
+            )
+            return
+
+        work.cancel(evento.reason)
+        self._repository.actualizar(work)
+        cancelled = WorkCancelledV1(
+            event_id=str(uuid4()),
+            occurred_at=int(datetime.utcnow().timestamp() * 1000),
+            schema_version='1',
+            work_id=str(work.id),
+            external_reference=evento.external_reference,
+            reason=evento.reason,
+            status=work.status.valor,
+        )
+        self._event_publisher.publish(cancelled)
+        self._saga_log.add_step(
+            evento.external_reference,
+            'WORK_CANCELLED',
+            'COMPENSATED',
+            evento.reason,
+        )
+        logger.info('WorkCancelledV1 published: %s', work.id)
 
     def _close_resources(self) -> None:
         if self._consumer is not None:
