@@ -4,7 +4,7 @@ import uuid
 
 from seedwork.dominio.entidades import AgregacionRaiz
 
-from .eventos import MatchingCompleted, MatchingFailed
+from .eventos import MatchingCompleted
 from .excepciones import MatchingInvalido
 from .objetos_valor import MatchingStatus, ProviderId, WorkId
 
@@ -29,7 +29,7 @@ class Matching(AgregacionRaiz):
             fecha_actualizacion=datetime.utcnow(),
         )
 
-    def completar(self, provider_id: str, external_reference: str = '') -> None:
+    def completar(self, provider_id: str) -> None:
         if not provider_id:
             raise MatchingInvalido('provider_id es obligatorio para completar el matching')
         if self.work_id is None:
@@ -43,25 +43,6 @@ class Matching(AgregacionRaiz):
                 matching_id=self.id,
                 work_id=self.work_id.valor,
                 provider_id=provider_id,
-                external_reference=external_reference,
-                status=self.status.valor,
-            )
-        )
-
-    def fallar(self, reason: str, external_reference: str = '') -> None:
-        if not reason:
-            raise MatchingInvalido('reason es obligatorio para fallar el matching')
-        if self.work_id is None:
-            raise MatchingInvalido('No se puede fallar un matching sin work_id')
-
-        self.status = MatchingStatus.failed()
-        self.fecha_actualizacion = datetime.utcnow()
-        self.agregar_evento(
-            MatchingFailed(
-                matching_id=self.id,
-                work_id=self.work_id.valor,
-                external_reference=external_reference,
-                reason=reason,
                 status=self.status.valor,
             )
         )

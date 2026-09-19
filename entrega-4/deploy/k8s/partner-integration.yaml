@@ -67,7 +67,7 @@ metadata:
   name: partner-integration
   namespace: hda
 spec:
-  type: ClusterIP
+  type: LoadBalancer
   selector:
     app: partner-integration
   ports:

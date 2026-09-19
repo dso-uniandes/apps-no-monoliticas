@@ -1,0 +1,13 @@
+{
+  "scenario": "work_created_schema_compatibility",
+  "v1_published": 100,
+  "v1_processed_by_v1_consumer": 100,
+  "v2_published": 100,
+  "v2_processed_by_v1_consumer": 100,
+  "final_backlog": 0,
+  "deserialization_or_processing_errors": 0,
+  "consumer_checksum_before": "6717172e76828d5eb957fdc6b60f60e4bafbaab50fc509b8de51b758d57fc566",
+  "consumer_checksum_after": "6717172e76828d5eb957fdc6b60f60e4bafbaab50fc509b8de51b758d57fc566",
+  "consumer_code_changes": 0,
+  "result": "PASS"
+}

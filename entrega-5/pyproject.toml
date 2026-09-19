@@ -1,0 +1,17 @@
+[project]
+name = "hda-poc"
+version = "1.0.0"
+authors = [
+  { name="MISW4406", email="misw4406@uniandes.edu.co" },
+]
+description = "POC academica para Hogar de los Alpes"
+readme = "README.md"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
+pythonpath = [
+  ".", "src",
+]

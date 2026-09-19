@@ -1,0 +1,10 @@
+{
+  "scenario": "provider_matching_scalability",
+  "messages": 10000,
+  "consumers": 1,
+  "duration_seconds": 60,
+  "processed": 10000,
+  "processed_percentage": 100.0,
+  "required_percentage": 95.0,
+  "result": "PASS"
+}

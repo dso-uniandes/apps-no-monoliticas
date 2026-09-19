@@ -31,7 +31,6 @@ SERVICES=(
   "partner-rules:partner-rules.Dockerfile"
   "work-orchestration:work-orchestration.Dockerfile"
   "provider-matching:provider-matching.Dockerfile"
-  "bff:bff.Dockerfile"
 )
 
 for entry in "${SERVICES[@]}"; do

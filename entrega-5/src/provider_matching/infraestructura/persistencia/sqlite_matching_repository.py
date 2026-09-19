@@ -1,0 +1,116 @@
+import sqlite3
+from datetime import UTC, datetime
+from pathlib import Path
+from uuid import UUID
+
+from provider_matching.dominio.entidades import Matching
+from provider_matching.dominio.objetos_valor import MatchingStatus, ProviderId, WorkId
+from provider_matching.dominio.repositorios import MatchingRepository
+
+
+class SQLiteMatchingRepository(MatchingRepository):
+    def __init__(self, database_url: str, auto_create_schema: bool = True):
+        self._db_path = database_url.replace('sqlite:///', '')
+        Path(self._db_path).parent.mkdir(parents=True, exist_ok=True)
+        if auto_create_schema:
+            self._create_table()
+
+    def obtener_por_id(self, id: UUID) -> Matching | None:
+        with sqlite3.connect(self._db_path) as connection:
+            connection.row_factory = sqlite3.Row
+            row = connection.execute(
+                'SELECT * FROM matchings WHERE id = ?',
+                (str(id),),
+            ).fetchone()
+
+        if row is None:
+            return None
+
+        return Matching(
+            id=UUID(row['id']),
+            work_id=WorkId(row['work_id']),
+            status=MatchingStatus(row['status']),
+            provider_id=ProviderId(row['provider_id'])
+            if row['provider_id']
+            else None,
+            eventos=[],
+        )
+
+    def agregar(self, entity: Matching):
+        with sqlite3.connect(self._db_path) as connection:
+            columns = self._columns(connection)
+            insert_columns = ['id', 'work_id', 'status', 'provider_id']
+            values = [
+                str(entity.id),
+                entity.work_id.valor,
+                entity.status.valor,
+                entity.provider_id.valor if entity.provider_id else None,
+            ]
+
+            now = datetime.now(UTC).isoformat()
+            for audit_column in (
+                'fecha_creacion',
+                'fecha_actualizacion',
+                'created_at',
+                'updated_at',
+            ):
+                if audit_column in columns:
+                    insert_columns.append(audit_column)
+                    values.append(now)
+
+            placeholders = ', '.join('?' for _ in insert_columns)
+            columns_sql = ', '.join(insert_columns)
+            connection.execute(
+                f'''
+                INSERT OR REPLACE INTO matchings ({columns_sql})
+                VALUES ({placeholders})
+                ''',
+                values,
+            )
+            connection.commit()
+
+    def actualizar(self, entity: Matching) -> None:
+        with sqlite3.connect(self._db_path) as connection:
+            cursor = connection.execute(
+                '''
+                UPDATE matchings
+                SET work_id = ?, status = ?, provider_id = ?
+                WHERE id = ?
+                ''',
+                (
+                    entity.work_id.valor,
+                    entity.status.valor,
+                    entity.provider_id.valor if entity.provider_id else None,
+                    str(entity.id),
+                ),
+            )
+            connection.commit()
+            if cursor.rowcount == 0:
+                raise KeyError(f'Matching {entity.id} no existe')
+
+    def _columns(self, connection: sqlite3.Connection) -> set[str]:
+        rows = connection.execute('PRAGMA table_info(matchings)').fetchall()
+        return {row[1] for row in rows}
+
+    def eliminar(self, id: UUID) -> bool:
+        with sqlite3.connect(self._db_path) as connection:
+            cursor = connection.execute(
+                'DELETE FROM matchings WHERE id = ?',
+                (str(id),),
+            )
+            connection.commit()
+            return cursor.rowcount > 0
+
+    def _create_table(self) -> None:
+        with sqlite3.connect(self._db_path) as connection:
+            connection.execute(
+                '''
+                CREATE TABLE IF NOT EXISTS matchings (
+                    id TEXT PRIMARY KEY,
+                    work_id TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    provider_id TEXT
+                )
+                '''
+            )
+            connection.commit()

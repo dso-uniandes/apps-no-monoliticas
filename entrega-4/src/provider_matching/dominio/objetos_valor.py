@@ -23,7 +23,3 @@ class MatchingStatus(ObjetoValor):
     @staticmethod
     def completed() -> 'MatchingStatus':
         return MatchingStatus('COMPLETED')
-
-    @staticmethod
-    def failed() -> 'MatchingStatus':
-        return MatchingStatus('FAILED')

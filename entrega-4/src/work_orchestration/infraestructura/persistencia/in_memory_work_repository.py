@@ -11,12 +11,6 @@ class InMemoryWorkRepository(WorkRepository):
     def obtener_por_id(self, id: UUID) -> Work | None:
         return self._store.get(id)
 
-    def obtener_por_external_reference(self, external_reference: str) -> Work | None:
-        for work in self._store.values():
-            if work.external_reference.valor == external_reference:
-                return work
-        return None
-
     def agregar(self, entity: Work):
         self._store[entity.id] = entity
 

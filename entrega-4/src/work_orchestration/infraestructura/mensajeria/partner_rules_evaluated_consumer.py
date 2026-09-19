@@ -8,7 +8,6 @@ from pulsar.schema import AvroSchema
 from published_language.v1.partner_rules_evaluated import PartnerRulesEvaluatedV1
 from work_orchestration.aplicacion.comandos.create_work import CreateWork
 from work_orchestration.aplicacion.handlers.create_work import CreateWorkHandler
-from work_orchestration.infraestructura.saga_log import SagaLog
 
 
 logger = logging.getLogger(__name__)
@@ -21,14 +20,12 @@ class PartnerRulesEvaluatedConsumer:
         topic: str,
         subscription: str,
         create_work_handler: CreateWorkHandler,
-        saga_log: SagaLog,
         listener_name: str | None = None,
     ):
         self._pulsar_url = pulsar_url
         self._topic = topic
         self._subscription = subscription
         self._handler = create_work_handler
-        self._saga_log = saga_log
         self._listener_name = listener_name
         self._stop_event = threading.Event()
         self._thread: threading.Thread | None = None
@@ -83,12 +80,6 @@ class PartnerRulesEvaluatedConsumer:
                         'PartnerRulesEvaluatedV1 received: %s',
                         evento.external_reference,
                     )
-                    self._saga_log.add_step(
-                        evento.external_reference,
-                        'PARTNER_RULES_EVALUATED',
-                        'PASSED' if evento.allowed else 'REJECTED',
-                        f'allowed={evento.allowed}',
-                    )
                     if evento.allowed:
                         comando = CreateWork(
                             partner_id=evento.partner_id,
@@ -96,13 +87,7 @@ class PartnerRulesEvaluatedConsumer:
                             city=evento.city,
                             country=evento.country,
                         )
-                        work = self._handler.handle(comando)
-                        self._saga_log.add_step(
-                            evento.external_reference,
-                            'WORK_CREATED',
-                            'DONE',
-                            str(work.id),
-                        )
+                        self._handler.handle(comando)
                     self._consumer.acknowledge(msg)
                 except Exception:
                     logger.exception('Error procesando PartnerRulesEvaluatedV1')

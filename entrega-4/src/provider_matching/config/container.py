@@ -1,5 +1,4 @@
 from provider_matching.aplicacion.handlers.process_matching import ProcessMatchingHandler
-from provider_matching.aplicacion.puertos.event_publisher import EventPublisher
 from provider_matching.config.settings import settings
 from provider_matching.dominio.repositorios import MatchingRepository
 from provider_matching.infraestructura.mensajeria.noop_event_publisher import NoOpEventPublisher
@@ -8,28 +7,8 @@ from provider_matching.infraestructura.persistencia.in_memory_matching_repositor
 )
 
 _matching_repository: MatchingRepository | None = None
-_event_publisher: EventPublisher | None = None
+_event_publisher = NoOpEventPublisher()
 _work_created_consumer = None
-
-
-def get_event_publisher() -> EventPublisher:
-    global _event_publisher
-    if _event_publisher is None:
-        if settings.MESSAGING_ENABLED:
-            from provider_matching.infraestructura.mensajeria.pulsar_event_publisher import (
-                PulsarEventPublisher,
-            )
-
-            listener_name = settings.PULSAR_LISTENER_NAME.strip() or None
-            _event_publisher = PulsarEventPublisher(
-                pulsar_url=settings.PULSAR_URL,
-                completed_topic=settings.MATCHING_COMPLETED_TOPIC,
-                failed_topic=settings.MATCHING_FAILED_TOPIC,
-                listener_name=listener_name,
-            )
-        else:
-            _event_publisher = NoOpEventPublisher()
-    return _event_publisher
 
 
 def get_matching_repository() -> MatchingRepository:
@@ -52,7 +31,7 @@ def get_matching_repository() -> MatchingRepository:
 def get_process_matching_handler() -> ProcessMatchingHandler:
     return ProcessMatchingHandler(
         repositorio=get_matching_repository(),
-        event_publisher=get_event_publisher(),
+        event_publisher=_event_publisher,
     )
 
 
@@ -84,13 +63,10 @@ def start_messaging() -> None:
 
 
 def shutdown_messaging() -> None:
-    global _work_created_consumer, _event_publisher
+    global _work_created_consumer
     if _work_created_consumer is not None:
         _work_created_consumer.stop()
         _work_created_consumer = None
-    if _event_publisher is not None:
-        _event_publisher.close()
-        _event_publisher = None
 
 
 def shutdown_persistence() -> None:

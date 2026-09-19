@@ -4,7 +4,6 @@ networks:
 
 volumes:
   postgres_data:
-  work_orchestration_data:
   partner_integration_data:
   partner_rules_data:
   provider_matching_data:
@@ -74,7 +73,6 @@ services:
   bookie:
     image: apachepulsar/pulsar:4.0.13
     container_name: bookie
-    hostname: bookie
     restart: on-failure
     user: "0"
     networks:
@@ -83,7 +81,6 @@ services:
       - clusterName=cluster-a
       - zkServers=zookeeper:2181
       - metadataServiceUri=metadata-store:zk:zookeeper:2181
-      - advertisedAddress=bookie
       - PULSAR_MEM=-Xms256m -Xmx512m -XX:MaxDirectMemorySize=256m
     depends_on:
       zookeeper:
@@ -131,26 +128,6 @@ services:
       timeout: 10s
       retries: 30
       start_period: 40s
-
-  bff:
-    build:
-      context: .
-      dockerfile: bff.Dockerfile
-    container_name: bff
-    restart: on-failure
-    networks:
-      - hda
-    environment:
-      PARTNER_INTEGRATION_URL: http://partner-integration:8000
-      PARTNER_RULES_URL: http://partner-rules:8000
-      WORK_ORCHESTRATION_URL: http://work-orchestration:8000
-      PROVIDER_MATCHING_URL: http://provider-matching:8000
-      HTTP_TIMEOUT_SECONDS: "5"
-    ports:
-      - "8005:8000"
-    depends_on:
-      - partner-integration
-      - work-orchestration
 
   partner-integration:
     build:
@@ -218,16 +195,8 @@ services:
       PULSAR_URL: pulsar://broker:6650
       PULSAR_LISTENER_NAME: internal
       WORK_CREATED_TOPIC: persistent://public/default/hda-work-created-v1
-      WORK_CANCELLED_TOPIC: persistent://public/default/hda-work-cancelled-v1
       PARTNER_RULES_EVALUATED_TOPIC: persistent://public/default/hda-partner-rules-evaluated-v1
       PARTNER_RULES_EVALUATED_SUBSCRIPTION: hda-work-orchestration-v1
-      MATCHING_COMPLETED_TOPIC: persistent://public/default/hda-matching-completed-v1
-      MATCHING_COMPLETED_SUBSCRIPTION: hda-work-orchestration-saga-log-v1
-      MATCHING_FAILED_TOPIC: persistent://public/default/hda-matching-failed-v1
-      MATCHING_FAILED_SUBSCRIPTION: hda-work-orchestration-compensation-v1
-      SAGA_LOG_DATABASE_URL: sqlite:////data/saga_log.db
-    volumes:
-      - work_orchestration_data:/data
     ports:
       - "8003:8000"
     depends_on:
@@ -250,8 +219,6 @@ services:
       PULSAR_LISTENER_NAME: internal
       WORK_CREATED_TOPIC: persistent://public/default/hda-work-created-v1
       WORK_CREATED_SUBSCRIPTION: hda-provider-matching-v1
-      MATCHING_COMPLETED_TOPIC: persistent://public/default/hda-matching-completed-v1
-      MATCHING_FAILED_TOPIC: persistent://public/default/hda-matching-failed-v1
       PERSISTENCE_BACKEND: sqlite
       DATABASE_URL: sqlite:////data/provider_matching.db
       AUTO_CREATE_SCHEMA: "true"

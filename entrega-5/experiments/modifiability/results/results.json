@@ -1,0 +1,17 @@
+{
+  "experiment": "modifiability_new_partner",
+  "partner": "partner-demo",
+  "baseline_commit": "b4af34603a076058ac51c68c6b5adf19cefe4cf4",
+  "affected_bounded_contexts": 2,
+  "affected_bounded_context_names": [
+    "partner_integration",
+    "partner_rules"
+  ],
+  "max_allowed_bounded_contexts": 2,
+  "work_orchestration_files_changed": 0,
+  "max_allowed_work_changes": 0,
+  "new_partner_supported": true,
+  "normalization_successful": true,
+  "rules_successful": true,
+  "result": "PASS"
+}

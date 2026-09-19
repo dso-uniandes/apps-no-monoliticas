@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: partner-rules
+  namespace: hda
+  labels:
+    app: partner-rules
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: partner-rules
+  template:
+    metadata:
+      labels:
+        app: partner-rules
+    spec:
+      containers:
+        - name: partner-rules
+          image: __ARTIFACT_REGISTRY__/partner-rules:__IMAGE_TAG__
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+              name: http
+          env:
+            - name: MESSAGING_ENABLED
+              value: "true"
+            - name: PULSAR_URL
+              value: pulsar://pulsar:6650
+            - name: EVALUATE_PARTNER_RULES_TOPIC
+              value: persistent://public/default/hda-evaluate-partner-rules-v1
+            - name: EVALUATE_PARTNER_RULES_SUBSCRIPTION
+              value: hda-partner-rules-v1
+            - name: PARTNER_RULES_EVALUATED_TOPIC
+              value: persistent://public/default/hda-partner-rules-evaluated-v1
+            - name: PERSISTENCE_BACKEND
+              value: sqlite
+            - name: DATABASE_URL
+              value: sqlite:////data/partner_rules.db
+            - name: AUTO_CREATE_SCHEMA
+              value: "true"
+          volumeMounts:
+            - name: partner-rules-data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+      volumes:
+        - name: partner-rules-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: partner-rules
+  namespace: hda
+spec:
+  type: ClusterIP
+  selector:
+    app: partner-rules
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000

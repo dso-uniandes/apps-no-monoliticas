@@ -1,0 +1,11 @@
+project_id  = "YOUR_GCP_PROJECT_ID"
+region      = "us-central1"
+zone        = "us-central1-a"
+environment = "dev"
+
+# Optional overrides:
+# gke_machine_type = "e2-standard-2"
+# gke_min_node_count = 1
+# gke_max_node_count = 2
+# cloud_sql_tier = "db-f1-micro"
+# cloud_sql_database_version = "POSTGRES_15"

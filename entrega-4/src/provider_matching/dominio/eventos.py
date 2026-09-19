@@ -10,13 +10,3 @@ class MatchingCompleted(EventoDominio):
     work_id: str | None = None
     provider_id: str | None = None
     status: str | None = None
-    external_reference: str | None = None
-
-
-@dataclass
-class MatchingFailed(EventoDominio):
-    matching_id: uuid.UUID | None = None
-    work_id: str | None = None
-    external_reference: str | None = None
-    reason: str | None = None
-    status: str | None = None

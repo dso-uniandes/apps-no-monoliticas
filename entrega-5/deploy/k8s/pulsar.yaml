@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pulsar
+  namespace: hda
+  labels:
+    app: pulsar
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pulsar
+  template:
+    metadata:
+      labels:
+        app: pulsar
+    spec:
+      securityContext:
+        runAsUser: 0
+        fsGroup: 0
+      containers:
+        - name: pulsar
+          image: apachepulsar/pulsar:4.0.13
+          imagePullPolicy: IfNotPresent
+          command: ["bin/pulsar", "standalone"]
+          env:
+            - name: PULSAR_MEM
+              value: "-Xms512m -Xmx1536m -XX:MaxDirectMemorySize=512m"
+          ports:
+            - name: binary
+              containerPort: 6650
+            - name: http
+              containerPort: 8080
+          resources:
+            requests:
+              cpu: 250m
+              memory: 1536Mi
+            limits:
+              cpu: "1"
+              memory: 2Gi
+          volumeMounts:
+            - name: data
+              mountPath: /pulsar/data
+          readinessProbe:
+            tcpSocket:
+              port: 6650
+            initialDelaySeconds: 40
+            periodSeconds: 10
+            failureThreshold: 18
+          livenessProbe:
+            tcpSocket:
+              port: 6650
+            initialDelaySeconds: 90
+            periodSeconds: 20
+            failureThreshold: 6
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pulsar
+  namespace: hda
+  labels:
+    app: pulsar
+spec:
+  type: ClusterIP
+  selector:
+    app: pulsar
+  ports:
+    - name: binary
+      port: 6650
+      targetPort: 6650
+    - name: http
+      port: 8080
+      targetPort: 8080

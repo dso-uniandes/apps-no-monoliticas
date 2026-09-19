@@ -65,7 +65,6 @@ kubectl apply -f "$(render "${K8S_DIR}/partner-integration.yaml")"
 kubectl apply -f "$(render "${K8S_DIR}/partner-rules.yaml")"
 kubectl apply -f "$(render "${K8S_DIR}/work-orchestration.yaml")"
 kubectl apply -f "$(render "${K8S_DIR}/provider-matching.yaml")"
-kubectl apply -f "$(render "${K8S_DIR}/bff.yaml")"
 
 echo "==> waiting rollouts (tag=${IMAGE_TAG})"
 kubectl -n hda rollout status deployment/pulsar --timeout=300s
@@ -73,7 +72,6 @@ kubectl -n hda rollout status deployment/partner-integration --timeout=180s
 kubectl -n hda rollout status deployment/partner-rules --timeout=180s
 kubectl -n hda rollout status deployment/work-orchestration --timeout=300s
 kubectl -n hda rollout status deployment/provider-matching --timeout=300s
-kubectl -n hda rollout status deployment/bff --timeout=180s
 
 echo "==> Deploy listo."
 kubectl -n hda get pods,svc

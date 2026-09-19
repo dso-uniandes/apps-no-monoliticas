@@ -1,0 +1,123 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: work-orchestration
+  namespace: hda
+  annotations:
+    iam.gke.io/gcp-service-account: __WORK_ORCHESTRATION_GSA__
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: work-orchestration
+  namespace: hda
+  labels:
+    app: work-orchestration
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: work-orchestration
+  template:
+    metadata:
+      labels:
+        app: work-orchestration
+    spec:
+      serviceAccountName: work-orchestration
+      containers:
+        - name: work-orchestration
+          image: __ARTIFACT_REGISTRY__/work-orchestration:__IMAGE_TAG__
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+              name: http
+          env:
+            - name: PERSISTENCE_BACKEND
+              value: postgres
+            - name: AUTO_CREATE_SCHEMA
+              value: "true"
+            - name: MESSAGING_ENABLED
+              value: "true"
+            - name: PULSAR_URL
+              value: pulsar://pulsar:6650
+            - name: WORK_CREATED_TOPIC
+              value: persistent://public/default/hda-work-created-v1
+            - name: WORK_CANCELLED_TOPIC
+              value: persistent://public/default/hda-work-cancelled-v1
+            - name: PARTNER_RULES_EVALUATED_TOPIC
+              value: persistent://public/default/hda-partner-rules-evaluated-v1
+            - name: PARTNER_RULES_EVALUATED_SUBSCRIPTION
+              value: hda-work-orchestration-v1
+            - name: MATCHING_COMPLETED_TOPIC
+              value: persistent://public/default/hda-matching-completed-v1
+            - name: MATCHING_COMPLETED_SUBSCRIPTION
+              value: hda-work-orchestration-saga-log-v1
+            - name: MATCHING_FAILED_TOPIC
+              value: persistent://public/default/hda-matching-failed-v1
+            - name: MATCHING_FAILED_SUBSCRIPTION
+              value: hda-work-orchestration-compensation-v1
+            - name: SAGA_LOG_DATABASE_URL
+              value: sqlite:////data/saga_log.db
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: hda-db
+                  key: database_url
+          volumeMounts:
+            - name: work-orchestration-data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+        - name: cloud-sql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.3
+          args:
+            - "--structured-logs"
+            - "--private-ip"
+            - "--address=127.0.0.1"
+            - "--port=5432"
+            - "__CLOUDSQL_CONNECTION_NAME__"
+          securityContext:
+            runAsNonRoot: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+      volumes:
+        - name: work-orchestration-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: work-orchestration
+  namespace: hda
+  labels:
+    app: work-orchestration
+spec:
+  type: LoadBalancer
+  selector:
+    app: work-orchestration
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000
