@@ -8,6 +8,7 @@ GCP con Terraform + GKE + Cloud SQL + Artifact Registry. Broker: Apache Pulsar.
 | Requisito | Evidencia |
 |---|---|
 | 4 microservicios | `partner-integration`, `partner-rules`, `work-orchestration`, `provider-matching` |
+| BFF | `bff` (unica puerta publica, `docs/bff-api.md`) |
 | Commands + Events | Comandos locales + contratos Avro en Pulsar |
 | Apache Pulsar | Compose + `deploy/k8s/pulsar.yaml` |
 | Published Language | `EvaluatePartnerRulesV1`, `PartnerRulesEvaluatedV1`, `WorkCreatedV1/V2` |
@@ -62,7 +63,19 @@ La compensacion ocurre en `work-orchestration`: cuando recibe `MatchingFailedV1`
 
 Para demostrar fallo se usa una referencia externa que contenga `fail`, por ejemplo `saga-fail-001`.
 
-Consultar Saga Log:
+Consultar el estado de la SAGA (via BFF, recomendado):
+
+```bash
+curl http://localhost:8005/api/v1/partner-requests/<external_reference>
+```
+
+Monitorear todas las transacciones recientes:
+
+```bash
+curl "http://localhost:8005/api/v1/partner-requests?limit=20"
+```
+
+Saga Log crudo en Work Orchestration:
 
 ```bash
 curl http://localhost:8003/sagas/<external_reference>
@@ -74,6 +87,14 @@ Demo local de transaccion exitosa y compensada:
 cd entrega-4
 bash scripts/demo-saga-local.sh
 ```
+
+## Documentacion
+
+| Documento | Contenido |
+|---|---|
+| `docs/bff-api.md` | Contrato del BFF |
+| `docs/bff-flujos.md` | Guia de demostracion: los 7 flujos paso a paso |
+| `docs/architecture.md` | Arquitectura de la POC implementada |
 
 ## Experimentos de calidad
 
@@ -112,9 +133,10 @@ bash experiments/deployability/run_experiment.sh
 | Partner Rules | Evalúa reglas del partner y publica el resultado | 8002 |
 | Work Orchestration | Crea Work si `allowed`, publica `WorkCreatedV1` | 8003 |
 | Provider Matching | Consume `WorkCreatedV1` y ejecuta matching | 8004 |
+| BFF | Unica API publica: inicia la SAGA y expone su estado consolidado | 8005 |
 
-Para Entrega 5, `partner-integration` funciona como BFF/API de entrada de la
-POC y, al mismo tiempo, como Anti-Corruption Layer para payloads B2B2C.
+`partner-integration` es el Anti-Corruption Layer de los payloads B2B2C.
+El BFF es la API que consume el cliente: ver `docs/bff-api.md`.
 
 ## Published Language
 
@@ -149,15 +171,29 @@ cd entrega-4
 docker compose up --build -d
 ```
 
-Entrada del flujo completo:
+Entrada del flujo completo (a traves del BFF):
 
 ```bash
-curl -X POST http://localhost:8001/partner-requests \
+curl -X POST http://localhost:8005/api/v1/partner-requests \
   -H "Content-Type: application/json" \
   -d '{"partner_id":"partner-demo","payload":{"reference":"EXT-LOCAL-001","municipality":"Bogota","country_code":"CO","service_type":"HOME_REPAIR"}}'
 ```
 
-Health:
+Estado de la solicitud (202 + recurso de estado):
+
+```bash
+curl http://localhost:8005/api/v1/partner-requests/EXT-LOCAL-001
+```
+
+Documentacion interactiva del BFF: <http://localhost:8005/docs>
+
+Health agregado:
+
+```bash
+curl http://localhost:8005/api/v1/health
+```
+
+Health por servicio:
 
 ```bash
 curl http://localhost:8001/health
@@ -181,12 +217,12 @@ Probar compensacion de la SAGA:
 
 ```bash
 FAIL_REF="saga-fail-$(date +%s)"
-curl -X POST http://localhost:8001/partner-requests \
+curl -X POST http://localhost:8005/api/v1/partner-requests \
   -H "Content-Type: application/json" \
   -d "{\"partner_id\":\"partner-demo\",\"payload\":{\"reference\":\"${FAIL_REF}\",\"municipality\":\"Bogota\",\"country_code\":\"CO\",\"service_type\":\"HOME_REPAIR\"}}"
 
 sleep 12
-curl "http://localhost:8003/sagas/${FAIL_REF}"
+curl "http://localhost:8005/api/v1/partner-requests/${FAIL_REF}"
 docker logs provider-matching | grep 'MatchingFailedV1 published'
 docker logs work-orchestration | grep 'WorkCancelledV1 published'
 ```
@@ -235,10 +271,11 @@ make verify
 
 Qué hace `make verify` / `scripts/verify-gcp.sh`:
 
-1. Obtiene la External IP del LoadBalancer de `partner-integration`.
-2. `GET /health` → debe responder `{"service":"partner-integration","status":"ok"}`.
-3. `POST /partner-requests` con un `reference` único (`ext-gcp-<timestamp>`).
-4. Espera el flujo async y comprueba en logs:
+1. Obtiene la External IP del LoadBalancer del `bff` (única puerta pública).
+2. `GET /api/v1/health` → estado consolidado del BFF y los 4 microservicios.
+3. `POST /api/v1/partner-requests` con un `reference` único (`ext-gcp-<timestamp>`).
+4. `GET /api/v1/partner-requests/<ref>` → verifica que el BFF reporte `COMPLETED`.
+5. Espera el flujo async y comprueba en logs:
 
 | Paso | Servicio | Log esperado |
 |---|---|---|
@@ -252,19 +289,21 @@ Qué hace `make verify` / `scripts/verify-gcp.sh`:
 ### Prueba E2E manual (sin script)
 
 ```bash
-# External IP de Partner Integration
-EXTERNAL_IP=$(kubectl -n hda get svc partner-integration \
+# External IP del BFF
+EXTERNAL_IP=$(kubectl -n hda get svc bff \
   -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
-curl -fsS "http://${EXTERNAL_IP}/health"
+curl -fsS "http://${EXTERNAL_IP}/api/v1/health"
 
 REF="ext-gcp-$(date +%s)"
-curl -fsS -X POST "http://${EXTERNAL_IP}/partner-requests" \
+curl -fsS -X POST "http://${EXTERNAL_IP}/api/v1/partner-requests" \
   -H "Content-Type: application/json" \
   -d "{\"partner_id\":\"partner-demo\",\"payload\":{\"reference\":\"${REF}\",\"municipality\":\"Bogota\",\"country_code\":\"CO\",\"service_type\":\"HOME_REPAIR\"}}"
 
-# Esperar ~12s y revisar logs del flujo PI → PR → WO → PM
+# Esperar ~12s y revisar el estado consolidado + los logs del flujo
 sleep 12
+curl -fsS "http://${EXTERNAL_IP}/api/v1/partner-requests/${REF}"
+
 kubectl -n hda logs deploy/partner-integration --tail=80 | grep "EvaluatePartnerRulesV1 published"
 kubectl -n hda logs deploy/partner-rules --tail=80 | grep -E "EvaluatePartnerRulesV1 received|PartnerRulesEvaluatedV1 published"
 kubectl -n hda logs deploy/work-orchestration -c work-orchestration --tail=80 | grep -E "PartnerRulesEvaluatedV1 received|Work persisted|WorkCreatedV1 published"

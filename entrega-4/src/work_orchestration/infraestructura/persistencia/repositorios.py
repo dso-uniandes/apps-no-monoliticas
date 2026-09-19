@@ -20,6 +20,21 @@ class SQLAlchemyWorkRepository(WorkRepository):
         finally:
             session.close()
 
+    def obtener_por_external_reference(self, external_reference: str) -> Work | None:
+        session = self._session_factory()
+        try:
+            model = (
+                session.query(WorkModel)
+                .filter(WorkModel.external_reference == external_reference)
+                .order_by(WorkModel.created_at.desc())
+                .first()
+            )
+            if model is None:
+                return None
+            return WorkPersistenceMapper.to_domain(model)
+        finally:
+            session.close()
+
     def agregar(self, entity: Work):
         session = self._session_factory()
         try:

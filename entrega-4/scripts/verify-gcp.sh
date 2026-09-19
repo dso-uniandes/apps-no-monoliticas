@@ -8,23 +8,23 @@ kubectl -n hda get pods,svc -o wide
 
 EXTERNAL_IP=""
 for _ in $(seq 1 30); do
-  EXTERNAL_IP="$(kubectl -n hda get svc partner-integration -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)"
+  EXTERNAL_IP="$(kubectl -n hda get svc bff -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)"
   if [[ -n "${EXTERNAL_IP}" ]]; then
     break
   fi
-  echo "Esperando External IP de partner-integration..."
+  echo "Esperando External IP del BFF..."
   sleep 10
 done
 
 if [[ -z "${EXTERNAL_IP}" ]]; then
-  echo "ERROR: no se obtuvo External IP del LoadBalancer de partner-integration." >&2
+  echo "ERROR: no se obtuvo External IP del LoadBalancer del BFF." >&2
   exit 1
 fi
 
 REF="ext-gcp-$(date +%s)"
-echo "==> External IP PI: ${EXTERNAL_IP}"
-echo "==> Health PI"
-curl -fsS "http://${EXTERNAL_IP}/health"
+echo "==> External IP BFF: ${EXTERNAL_IP}"
+echo "==> Health agregado (BFF + 4 microservicios)"
+curl -fsS "http://${EXTERNAL_IP}/api/v1/health"
 echo
 
 PAYLOAD="$(cat <<EOF
@@ -32,14 +32,18 @@ PAYLOAD="$(cat <<EOF
 EOF
 )"
 
-echo "==> POST /partner-requests (${REF})"
-RESP="$(curl -fsS -X POST "http://${EXTERNAL_IP}/partner-requests" \
+echo "==> POST /api/v1/partner-requests (${REF})"
+RESP="$(curl -fsS -X POST "http://${EXTERNAL_IP}/api/v1/partner-requests" \
   -H "Content-Type: application/json" \
   -d "${PAYLOAD}")"
 echo "${RESP}"
 
 echo "==> Esperando flujo asíncrono..."
 sleep 12
+
+echo "==> Estado consolidado de la SAGA via BFF"
+curl -fsS "http://${EXTERNAL_IP}/api/v1/partner-requests/${REF}"
+echo
 
 echo "==> Logs Partner Integration"
 kubectl -n hda logs deploy/partner-integration --tail=80 | grep -E "EvaluatePartnerRulesV1 published" || true
@@ -68,4 +72,10 @@ if [[ "${fail}" -ne 0 ]]; then
   exit 1
 fi
 
-echo "==> Verify OK (flujo PI → PR → WO → PM)"
+SAGA_STATUS="$(curl -fsS "http://${EXTERNAL_IP}/api/v1/partner-requests/${REF}" | python3 -c 'import json,sys; print(json.load(sys.stdin)["status"])')"
+if [[ "${SAGA_STATUS}" != "COMPLETED" ]]; then
+  echo "ERROR: el BFF reporta status=${SAGA_STATUS}, se esperaba COMPLETED." >&2
+  exit 1
+fi
+
+echo "==> Verify OK (BFF → PI → PR → WO → PM, saga ${SAGA_STATUS})"

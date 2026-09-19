@@ -1,5 +1,8 @@
 from work_orchestration.aplicacion.handlers.create_work import CreateWorkHandler
 from work_orchestration.aplicacion.handlers.get_work import GetWorkHandler
+from work_orchestration.aplicacion.handlers.get_work_by_external_reference import (
+    GetWorkByExternalReferenceHandler,
+)
 from work_orchestration.aplicacion.puertos.event_publisher import EventPublisher
 from work_orchestration.config.settings import settings
 from work_orchestration.dominio.repositorios import WorkRepository
@@ -83,6 +86,10 @@ def get_create_work_handler() -> CreateWorkHandler:
 
 def get_get_work_handler() -> GetWorkHandler:
     return GetWorkHandler(repositorio=get_work_repository())
+
+
+def get_get_work_by_external_reference_handler() -> GetWorkByExternalReferenceHandler:
+    return GetWorkByExternalReferenceHandler(repositorio=get_work_repository())
 
 
 def get_partner_rules_evaluated_consumer():

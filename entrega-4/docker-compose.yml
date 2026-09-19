@@ -132,6 +132,26 @@ services:
       retries: 30
       start_period: 40s
 
+  bff:
+    build:
+      context: .
+      dockerfile: bff.Dockerfile
+    container_name: bff
+    restart: on-failure
+    networks:
+      - hda
+    environment:
+      PARTNER_INTEGRATION_URL: http://partner-integration:8000
+      PARTNER_RULES_URL: http://partner-rules:8000
+      WORK_ORCHESTRATION_URL: http://work-orchestration:8000
+      PROVIDER_MATCHING_URL: http://provider-matching:8000
+      HTTP_TIMEOUT_SECONDS: "5"
+    ports:
+      - "8005:8000"
+    depends_on:
+      - partner-integration
+      - work-orchestration
+
   partner-integration:
     build:
       context: .

@@ -6,8 +6,18 @@ from pydantic import BaseModel
 from work_orchestration.aplicacion.comandos.create_work import CreateWork
 from work_orchestration.aplicacion.handlers.create_work import CreateWorkHandler
 from work_orchestration.aplicacion.handlers.get_work import GetWorkHandler
+from work_orchestration.aplicacion.handlers.get_work_by_external_reference import (
+    GetWorkByExternalReferenceHandler,
+)
 from work_orchestration.aplicacion.queries.get_work import GetWork
-from work_orchestration.config.container import get_create_work_handler, get_get_work_handler
+from work_orchestration.aplicacion.queries.get_work_by_external_reference import (
+    GetWorkByExternalReference,
+)
+from work_orchestration.config.container import (
+    get_create_work_handler,
+    get_get_work_by_external_reference_handler,
+    get_get_work_handler,
+)
 from work_orchestration.dominio.excepciones import WorkInvalido, WorkNoEncontrado
 
 router = APIRouter()
@@ -71,6 +81,21 @@ def get_work(
     handler: GetWorkHandler = Depends(get_get_work_handler),
 ) -> WorkResponse:
     query = GetWork(work_id=work_id)
+    try:
+        resultado = handler.handle(query)
+    except WorkNoEncontrado as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    return _to_response(resultado.resultado)
+
+
+@router.get('/works', response_model=WorkResponse)
+def get_work_by_external_reference(
+    external_reference: str,
+    handler: GetWorkByExternalReferenceHandler = Depends(
+        get_get_work_by_external_reference_handler
+    ),
+) -> WorkResponse:
+    query = GetWorkByExternalReference(external_reference=external_reference)
     try:
         resultado = handler.handle(query)
     except WorkNoEncontrado as exc:

@@ -1,34 +1,41 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PI_URL="${PI_URL:-http://localhost:8001}"
-WO_URL="${WO_URL:-http://localhost:8003}"
+# Demo de la SAGA coreografiada a traves del BFF: una transaccion exitosa y una
+# con fallo que dispara compensacion. Todo se consulta por la misma API.
+BFF_URL="${BFF_URL:-http://localhost:8005}"
 
 success_ref="saga-success-$(date +%s)"
 fail_ref="saga-fail-$(date +%s)"
 
+post_request() {
+  curl -fsS -X POST "${BFF_URL}/api/v1/partner-requests" \
+    -H "Content-Type: application/json" \
+    -d "{\"partner_id\":\"partner-demo\",\"payload\":{\"reference\":\"$1\",\"municipality\":\"Bogota\",\"country_code\":\"CO\",\"service_type\":\"HOME_REPAIR\"}}"
+  echo
+}
+
+show_status() {
+  curl -fsS "${BFF_URL}/api/v1/partner-requests/$1" | python3 -m json.tool
+}
+
+echo "==> Health agregado"
+curl -fsS "${BFF_URL}/api/v1/health" | python3 -m json.tool
+
 echo "==> Caso exitoso: ${success_ref}"
-curl -fsS -X POST "${PI_URL}/partner-requests" \
-  -H "Content-Type: application/json" \
-  -d "{\"partner_id\":\"partner-demo\",\"payload\":{\"reference\":\"${success_ref}\",\"municipality\":\"Bogota\",\"country_code\":\"CO\",\"service_type\":\"HOME_REPAIR\"}}"
-echo
+post_request "${success_ref}"
 
 echo "==> Caso con compensacion: ${fail_ref}"
-curl -fsS -X POST "${PI_URL}/partner-requests" \
-  -H "Content-Type: application/json" \
-  -d "{\"partner_id\":\"partner-demo\",\"payload\":{\"reference\":\"${fail_ref}\",\"municipality\":\"Bogota\",\"country_code\":\"CO\",\"service_type\":\"HOME_REPAIR\"}}"
-echo
+post_request "${fail_ref}"
 
 echo "==> Esperando eventos async..."
 sleep 12
 
-echo "==> Saga Log exitoso"
-curl -fsS "${WO_URL}/sagas/${success_ref}"
-echo
+echo "==> Estado de la SAGA exitosa (esperado: COMPLETED)"
+show_status "${success_ref}"
 
-echo "==> Saga Log compensado"
-curl -fsS "${WO_URL}/sagas/${fail_ref}"
-echo
+echo "==> Estado de la SAGA compensada (esperado: COMPENSATED)"
+show_status "${fail_ref}"
 
 echo "==> Logs utiles"
 docker logs provider-matching --tail=120 | grep -E 'MatchingCompletedV1 published|MatchingFailedV1 published' || true

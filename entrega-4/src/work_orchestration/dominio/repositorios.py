@@ -12,6 +12,10 @@ class WorkRepository(Repositorio, ABC):
         ...
 
     @abstractmethod
+    def obtener_por_external_reference(self, external_reference: str) -> Work | None:
+        ...
+
+    @abstractmethod
     def agregar(self, entity: Work):
         ...
 
