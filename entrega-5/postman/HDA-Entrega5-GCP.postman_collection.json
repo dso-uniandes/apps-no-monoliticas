@@ -1,0 +1,384 @@
+{
+  "info": {
+    "_postman_id": "hda-entrega5-gcp-collection",
+    "name": "HDA Entrega5 GCP",
+    "description": "Coleccion E2E contra el BFF publico en GCP. Unica puerta: LoadBalancer del BFF. No llama microservicios internos.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 - Health",
+      "item": [
+        {
+          "name": "GET Health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('status ok', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql('ok');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{bff_url}}/health"
+          }
+        },
+        {
+          "name": "GET Aggregated Health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('upstreams ok', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql('ok');",
+                  "    pm.expect(body.upstreams['partner-integration']).to.eql('ok');",
+                  "    pm.expect(body.upstreams['partner-rules']).to.eql('ok');",
+                  "    pm.expect(body.upstreams['work-orchestration']).to.eql('ok');",
+                  "    pm.expect(body.upstreams['provider-matching']).to.eql('ok');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{bff_url}}/api/v1/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Saga exitosa",
+      "item": [
+        {
+          "name": "POST Partner Request (success)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var ref = 'gcp-saga-success-' + Date.now();",
+                  "pm.environment.set('success_external_reference', ref);",
+                  "pm.variables.set('success_ref', ref);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 202', function () {",
+                  "    pm.response.to.have.status(202);",
+                  "});",
+                  "pm.test('guarda external_reference', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body.external_reference).to.be.ok;",
+                  "    pm.environment.set('success_external_reference', body.external_reference);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partner_id\": \"partner-demo\",\n  \"payload\": {\n    \"reference\": \"{{success_ref}}\",\n    \"municipality\": \"Bogota\",\n    \"country_code\": \"CO\",\n    \"service_type\": \"HOME_REPAIR\"\n  }\n}"
+            },
+            "url": "{{bff_url}}/api/v1/partner-requests"
+          }
+        },
+        {
+          "name": "GET Partner Request Status (success)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "setTimeout(function () {}, 5000);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('status COMPLETED', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql('COMPLETED');",
+                  "    if (body.work && body.work.id) {",
+                  "        pm.environment.set('work_id', body.work.id);",
+                  "    }",
+                  "});",
+                  "pm.test('saga steps presentes', function () {",
+                  "    var steps = pm.response.json().steps.map(function (s) { return s.step; });",
+                  "    pm.expect(steps).to.include('PARTNER_RULES_EVALUATED');",
+                  "    pm.expect(steps).to.include('WORK_CREATED');",
+                  "    pm.expect(steps).to.include('MATCHING_COMPLETED');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{bff_url}}/api/v1/partner-requests/{{success_external_reference}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Saga con compensacion",
+      "item": [
+        {
+          "name": "POST Partner Request (compensation)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var ref = 'gcp-saga-compensation-fail-' + Date.now();",
+                  "pm.environment.set('compensation_external_reference', ref);",
+                  "pm.variables.set('compensation_ref', ref);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 202', function () {",
+                  "    pm.response.to.have.status(202);",
+                  "});",
+                  "pm.test('guarda compensation_external_reference', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.environment.set('compensation_external_reference', body.external_reference);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partner_id\": \"partner-demo\",\n  \"payload\": {\n    \"reference\": \"{{compensation_ref}}\",\n    \"municipality\": \"Bogota\",\n    \"country_code\": \"CO\",\n    \"service_type\": \"HOME_REPAIR\"\n  }\n}"
+            },
+            "url": "{{bff_url}}/api/v1/partner-requests"
+          }
+        },
+        {
+          "name": "GET Partner Request Status (compensation)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "setTimeout(function () {}, 5000);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('status COMPENSATED', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql('COMPENSATED');",
+                  "});",
+                  "pm.test('work CANCELLED', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body.work).to.be.ok;",
+                  "    pm.expect(body.work.status).to.eql('CANCELLED');",
+                  "});",
+                  "pm.test('pasos de compensacion', function () {",
+                  "    var steps = pm.response.json().steps.map(function (s) { return s.step; });",
+                  "    pm.expect(steps).to.include('MATCHING_FAILED');",
+                  "    pm.expect(steps).to.include('WORK_CANCELLED');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{bff_url}}/api/v1/partner-requests/{{compensation_external_reference}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Reglas rechazadas",
+      "item": [
+        {
+          "name": "POST Partner Request (rejected)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var ref = 'gcp-saga-rejected-' + Date.now();",
+                  "pm.environment.set('rejected_external_reference', ref);",
+                  "pm.variables.set('rejected_ref', ref);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 202', function () {",
+                  "    pm.response.to.have.status(202);",
+                  "});",
+                  "pm.test('guarda rejected_external_reference', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.environment.set('rejected_external_reference', body.external_reference);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partner_id\": \"partner-demo\",\n  \"payload\": {\n    \"reference\": \"{{rejected_ref}}\",\n    \"municipality\": \"Bogota\",\n    \"country_code\": \"CO\",\n    \"service_type\": \"PLUMBING\"\n  }\n}"
+            },
+            "url": "{{bff_url}}/api/v1/partner-requests"
+          }
+        },
+        {
+          "name": "GET Partner Request Status (rejected)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "setTimeout(function () {}, 5000);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('status REJECTED', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body.status).to.eql('REJECTED');",
+                  "    pm.expect(body.work).to.eql(null);",
+                  "});",
+                  "pm.test('sin matching', function () {",
+                  "    var steps = pm.response.json().steps.map(function (s) { return s.step; });",
+                  "    pm.expect(steps).to.not.include('WORK_CREATED');",
+                  "    pm.expect(steps).to.not.include('MATCHING_COMPLETED');",
+                  "    pm.expect(steps).to.not.include('MATCHING_FAILED');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{bff_url}}/api/v1/partner-requests/{{rejected_external_reference}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Operaciones de consulta",
+      "item": [
+        {
+          "name": "GET Partner Requests list",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{bff_url}}/api/v1/partner-requests?limit=20",
+              "host": ["{{bff_url}}"],
+              "path": ["api", "v1", "partner-requests"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

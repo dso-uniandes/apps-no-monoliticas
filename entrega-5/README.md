@@ -233,11 +233,94 @@ Apagar (conserva volúmenes):
 docker compose down
 ```
 
-## Despliegue en GCP
+## GCP — Entrega 5
+
+| Campo | Valor |
+|---|---|
+| Project ID | `alpine-land-507822-t7` |
+| Cluster | `hda-poc` (`us-central1-a`) |
+| IMAGE_TAG | `e5-202609192043` |
+| BFF public URL | `http://136.64.180.29` |
+| Swagger | `http://136.64.180.29/docs` |
+| Artifact Registry | `us-central1-docker.pkg.dev/alpine-land-507822-t7/hda-poc` |
+
+**BFF = única API pública** (`Service type: LoadBalancer`).
+
+Microservicios internos (`ClusterIP`):
+
+- `partner-integration`
+- `partner-rules`
+- `work-orchestration` (+ Saga Log SQLite en `/data`, Cloud SQL Auth Proxy sidecar)
+- `provider-matching`
+- `pulsar`
+
+### Saga implementada (coreografiada)
+
+```
+BFF → Partner Integration → EvaluatePartnerRulesV1 → Partner Rules
+  → PartnerRulesEvaluatedV1 → Work Orchestration → WorkCreatedV1
+  → Provider Matching → MatchingCompletedV1 | MatchingFailedV1
+```
+
+- Éxito: `COMPLETED` (pasos `PARTNER_RULES_EVALUATED`, `WORK_CREATED`, `MATCHING_COMPLETED`)
+- Fallo matching (`fail` en `external_reference`): compensación → Work `CANCELLED` → `COMPENSATED`
+- Rechazo reglas (`service_type=PLUMBING`): `REJECTED`, sin Work ni matching
+
+### Postman
+
+Importar en Postman:
+
+1. Collection: `postman/HDA-Entrega5-GCP.postman_collection.json`
+2. Environment: `postman/HDA-Entrega5-GCP.postman_environment.json` (`HDA Entrega5 GCP`)
+
+Variable `bff_url` = `http://136.64.180.29`.
+
+Carpetas:
+
+1. Health
+2. Saga exitosa (`HOME_REPAIR`)
+3. Saga con compensación (`fail` en reference)
+4. Reglas rechazadas (`PLUMBING`)
+5. Operaciones de consulta
+
+Ejecutar con Newman:
+
+```bash
+cd entrega-5
+newman run postman/HDA-Entrega5-GCP.postman_collection.json \
+  -e postman/HDA-Entrega5-GCP.postman_environment.json \
+  --delay-request 5000
+```
+
+### Cómo probar en GCP
+
+```bash
+BFF=http://136.64.180.29
+
+# Health
+curl -sS "$BFF/api/v1/health"
+
+# Saga exitosa
+curl -sS -X POST "$BFF/api/v1/partner-requests" -H "Content-Type: application/json" \
+  -d '{"partner_id":"partner-demo","payload":{"reference":"gcp-saga-success-demo","municipality":"Bogota","country_code":"CO","service_type":"HOME_REPAIR"}}'
+curl -sS "$BFF/api/v1/partner-requests/gcp-saga-success-demo"
+
+# Saga compensada
+curl -sS -X POST "$BFF/api/v1/partner-requests" -H "Content-Type: application/json" \
+  -d '{"partner_id":"partner-demo","payload":{"reference":"gcp-saga-compensation-fail-demo","municipality":"Bogota","country_code":"CO","service_type":"HOME_REPAIR"}}'
+curl -sS "$BFF/api/v1/partner-requests/gcp-saga-compensation-fail-demo"
+
+# Rechazo de reglas
+curl -sS -X POST "$BFF/api/v1/partner-requests" -H "Content-Type: application/json" \
+  -d '{"partner_id":"partner-demo","payload":{"reference":"gcp-saga-rejected-demo","municipality":"Bogota","country_code":"CO","service_type":"PLUMBING"}}'
+curl -sS "$BFF/api/v1/partner-requests/gcp-saga-rejected-demo"
+```
+
+## Despliegue en GCP (Entrega 4 / base)
 
 Proyecto: `alpine-land-507822-t7`.
 
-**Estado: PASS** — E2E en GKE (`ext-gcp-1789426682`): PI → PR → WO → PM
+**Estado base E4: PASS** — E2E en GKE (`ext-gcp-1789426682`): PI → PR → WO → PM
 (`EvaluatePartnerRulesV1` → `PartnerRulesEvaluatedV1` → `WorkCreatedV1` → Matching).
 
 ### Desplegar (si aún no está en el cluster)
