@@ -1,231 +1,74 @@
-# Entrega 4 - POC de arquitectura Hogar de los Alpes
+# Entrega 5 - Prueba de concepto final | Hogar de los Alpes
 
-POC de microservicios orientados a eventos en Python. Local con Docker Compose;
-GCP con Terraform + GKE + Cloud SQL + Artifact Registry. Broker: Apache Pulsar.
+Esta entrega contiene la POC final de Hogar de los Alpes. El sistema está separado en cuatro microservicios, usa Apache Pulsar para la comunicación asíncrona y expone el flujo al exterior únicamente por medio del BFF. También dejamos los experimentos finales de calidad, la SAGA con compensación y todo lo necesario para levantar y probar la solución.
 
-## Alcance
+## Arquitectura y estructura del proyecto
 
-| Requisito | Evidencia |
+El flujo entra por el BFF. Partner Integration recibe y normaliza el request del partner. Partner Rules evalúa las reglas. Work Orchestration crea o cancela el `Work`. Provider Matching hace el matching. Entre ellos no hay HTTP: se hablan por contratos Avro sobre Pulsar.
+
+| Componente | Responsabilidad |
 |---|---|
-| 4 microservicios | `partner-integration`, `partner-rules`, `work-orchestration`, `provider-matching` |
-| BFF | `bff` (unica puerta publica, `docs/bff-api.md`) |
-| Commands + Events | Comandos locales + contratos Avro en Pulsar |
-| Apache Pulsar | Compose + `deploy/k8s/pulsar.yaml` |
-| Published Language | `EvaluatePartnerRulesV1`, `PartnerRulesEvaluatedV1`, `WorkCreatedV1/V2` |
-| CRUD descentralizado | PI/PR/PM: SQLite; WO: PostgreSQL |
-| Despliegue | Docker Compose y Terraform/GKE |
+| BFF | Única API pública: arranca el flujo y consolida el estado de la SAGA |
+| Partner Integration | ACL B2B2C: normaliza el payload externo y publica `EvaluatePartnerRulesV1` |
+| Partner Rules | Evalúa reglas/SLA del partner y publica `PartnerRulesEvaluatedV1` |
+| Work Orchestration | Crea el `Work`, publica `WorkCreatedV1` y aplica compensación si el matching falla |
+| Provider Matching | Consume `WorkCreatedV1` y publica `MatchingCompletedV1` o `MatchingFailedV1` |
+| Apache Pulsar | Broker de commands/events |
+| Persistencia | PI/PR/PM: SQLite; WO: PostgreSQL (+ Saga Log SQLite en la POC) |
 
-## Flujo asíncrono
+Carpetas principales:
 
-```
-Partner externo
-      |
-      | POST /partner-requests
-      v
-Partner Integration (ACL)
-      |
-      | EvaluatePartnerRulesV1 [COMMAND]
-      v
-Apache Pulsar
-      |
-      v
-Partner Rules
-      |
-      | PartnerRulesEvaluatedV1 [INTEGRATION EVENT]
-      v
-Apache Pulsar
-      |
-      v
-Work Orchestration
-      |
-      | WorkCreatedV1 [INTEGRATION EVENT]
-      v
-Apache Pulsar
-      |
-      v
-Provider Matching
+```text
+src/                  Código de los microservicios y BFF
+deploy/               Manifiestos de despliegue
+infra/                Infraestructura (Terraform)
+experiments/          Experimentos de calidad y resultados
+docs/                 Documentación técnica
+postman/              Collection y environment de Postman
+scripts/              Automatización de build, deploy y verificación
+tests/                Pruebas automatizadas
 ```
 
-No hay HTTP entre microservicios. Solo se comparte Published Language.
+Detalle arquitectónico: [`docs/architecture.md`](docs/architecture.md).
 
-Diagrama: `docs/architecture.puml`.
+## Sobre el flujo probado
 
-## SAGA Entrega 5
+A nivel de negocio, todo este flujo empieza cuando un partner necesita solicitar un trabajo para uno de sus clientes. Ese partner no tiene que conocer cómo funciona internamente Hogar de los Alpes ni cómo están divididos nuestros servicios: simplemente envía su solicitud por medio del BFF.
 
-La SAGA se implementa por coreografia con eventos y abarca los 4 servicios:
+A partir de ahí, Partner Integration se encarga de traducir la solicitud del partner al formato que entiende nuestro sistema. Partner Rules aplica las condiciones y reglas particulares de ese partner y, si todo está correcto, Work Orchestration crea y administra el trabajo que debe atenderse.
 
-1. `partner-integration` recibe `POST /partner-requests`, normaliza el payload y publica `EvaluatePartnerRulesV1`.
-2. `partner-rules` consume el command, evalua reglas y publica `PartnerRulesEvaluatedV1`.
-3. `work-orchestration` consume el resultado, crea el `Work`, publica `WorkCreatedV1` y escribe en el Saga Log.
-4. `provider-matching` consume `WorkCreatedV1` y publica `MatchingCompletedV1` o `MatchingFailedV1`.
+Una vez existe el trabajo, el sistema publica el evento correspondiente para que Provider Matching pueda buscar qué proveedor podría atenderlo. Es decir, técnicamente vemos una cadena de llamadas, eventos y bounded contexts, pero a nivel de negocio lo que realmente estamos haciendo es recibir una solicitud externa, convertirla en un trabajo interno de Hogar de los Alpes y empezar el proceso para encontrar quién lo va a atender.
 
-La compensacion ocurre en `work-orchestration`: cuando recibe `MatchingFailedV1`, cancela el `Work`, publica `WorkCancelledV1` y registra el paso en el Saga Log.
+## Escenarios de calidad probados
 
-Para demostrar fallo se usa una referencia externa que contenga `fail`, por ejemplo `saga-fail-001`.
+| Escenario | Qué queríamos comprobar | Criterio principal | Resultado | Evidencia |
+|---|---|---|---|---|
+| Modificabilidad / configurabilidad | Agregar un partner nuevo tocando como máximo Partner Integration y Partner Rules, sin cambios en Work Orchestration | ≤ 2 BC modificados; 0 cambios en WO | PASS | [`experiments/modifiability/results/`](experiments/modifiability/results/) |
+| Escalabilidad | Procesar al menos el 95 % de 10.000 trabajos acumulados en 60 s | ≥ 95 % en la ventana | PASS (1 consumidor) y PASS (4 consumidores) | [`experiments/scalability/results/`](experiments/scalability/results/) |
+| Desplegabilidad / compatibilidad | Evolucionar `WorkCreated` a V2 y mantener operativo al consumidor V1 sin cambios | V1 y V2 procesados; backlog 0; 0 errores; 0 cambios al consumidor | PASS | [`experiments/deployability/results/`](experiments/deployability/results/) |
 
-Consultar el estado de la SAGA (via BFF, recomendado):
+El análisis cualitativo completo de estos resultados está en [`docs/resultados-cualitativos.md`](docs/resultados-cualitativos.md).
+
+## Cómo ejecutar localmente
+
+Prerrequisitos: Docker y Docker Compose.
 
 ```bash
-curl http://localhost:8005/api/v1/partner-requests/<external_reference>
-```
-
-Monitorear todas las transacciones recientes:
-
-```bash
-curl "http://localhost:8005/api/v1/partner-requests?limit=20"
-```
-
-Saga Log crudo en Work Orchestration:
-
-```bash
-curl http://localhost:8003/sagas/<external_reference>
-```
-
-Demo local de transaccion exitosa y compensada:
-
-```bash
-cd entrega-4
-bash scripts/demo-saga-local.sh
-```
-
-## Documentacion
-
-| Documento | Contenido |
-|---|---|
-| `docs/bff-api.md` | Contrato del BFF |
-| `docs/bff-flujos.md` | Guia de demostracion: los 7 flujos paso a paso |
-| `docs/architecture.md` | Arquitectura de la POC implementada |
-
-## Experimentos de calidad
-
-| Experimento | Estado |
-|---|---|
-| Modificabilidad / Configurabilidad | COMPLETO — PASS |
-| Escalabilidad | COMPLETO — PASS |
-| Desplegabilidad / Autonomía | COMPLETO — PASS |
-
-Evidencia:
-
-- `experiments/modifiability/results/`
-- `experiments/scalability/results/`
-- `experiments/deployability/results/`
-
-### Desplegabilidad
-
-Productor V1 y productor V2 publican al mismo topic `hda-work-created-v1`.
-El consumidor V1 de Provider Matching procesa ambos sin cambios de código.
-V2 agrega `region` y `priority` con defaults Avro; el broker usa estrategia
-`FULL` (compatible hacia adelante y hacia atrás).
-
-Criterios: 100 V1 + 100 V2 procesados, backlog 0, 0 errores de deserialización,
-checksum del consumidor sin cambios.
-
-```bash
-cd entrega-4
-bash experiments/deployability/run_experiment.sh
-```
-
-## Microservicios
-
-| Servicio | Rol | Puerto |
-|---|---|---|
-| Partner Integration | ACL B2B2C: normaliza payload externo y publica el command | 8001 |
-| Partner Rules | Evalúa reglas del partner y publica el resultado | 8002 |
-| Work Orchestration | Crea Work si `allowed`, publica `WorkCreatedV1` | 8003 |
-| Provider Matching | Consume `WorkCreatedV1` y ejecuta matching | 8004 |
-| BFF | Unica API publica: inicia la SAGA y expone su estado consolidado | 8005 |
-
-`partner-integration` es el Anti-Corruption Layer de los payloads B2B2C.
-El BFF es la API que consume el cliente: ver `docs/bff-api.md`.
-
-## Published Language
-
-| Contrato | Tipo | Uso |
-|---|---|---|
-| `EvaluatePartnerRulesV1` | COMMAND | PI → PR |
-| `PartnerRulesEvaluatedV1` | INTEGRATION EVENT | PR → WO |
-| `WorkCreatedV1` / `WorkCreatedV2` | INTEGRATION EVENT | WO → PM (evolución compatible) |
-| `MatchingCompletedV1` | INTEGRATION EVENT | PM → monitoreo de SAGA |
-| `MatchingFailedV1` | INTEGRATION EVENT | PM → WO para compensacion |
-| `WorkCancelledV1` | INTEGRATION EVENT | WO publica la compensacion |
-
-Los contratos están versionados, no exponen el modelo interno de cada BC y desacoplan productores/consumidores.
-
-## Persistencia (CRUD)
-
-Topología **descentralizada**: cada MS es dueño de sus datos. Ninguno lee tablas de otro.
-
-| MS | Motor | Operaciones en repository |
-|---|---|---|
-| Partner Integration | SQLite | agregar, obtener_por_id, actualizar, eliminar |
-| Partner Rules | SQLite | agregar, obtener_por_id, actualizar, eliminar, obtener_por_partner |
-| Work Orchestration | PostgreSQL | agregar, obtener_por_id, actualizar, eliminar |
-| Provider Matching | SQLite | agregar, obtener_por_id, actualizar, eliminar |
-
-SQLite aquí es decisión de POC, no de producción.
-
-## Ejecutar localmente
-
-```bash
-cd entrega-4
+cd entrega-5
 docker compose up --build -d
 ```
 
-Entrada del flujo completo (a traves del BFF):
+Para revisar que quedó arriba:
 
 ```bash
-curl -X POST http://localhost:8005/api/v1/partner-requests \
-  -H "Content-Type: application/json" \
-  -d '{"partner_id":"partner-demo","payload":{"reference":"EXT-LOCAL-001","municipality":"Bogota","country_code":"CO","service_type":"HOME_REPAIR"}}'
-```
-
-Estado de la solicitud (202 + recurso de estado):
-
-```bash
-curl http://localhost:8005/api/v1/partner-requests/EXT-LOCAL-001
-```
-
-Documentacion interactiva del BFF: <http://localhost:8005/docs>
-
-Health agregado:
-
-```bash
+docker compose ps
 curl http://localhost:8005/api/v1/health
 ```
 
-Health por servicio:
+- BFF local: <http://localhost:8005>
+- Swagger local: <http://localhost:8005/docs>
 
-```bash
-curl http://localhost:8001/health
-curl http://localhost:8002/health
-curl http://localhost:8003/health
-curl http://localhost:8004/health
-```
-
-Logs esperados:
-
-```bash
-docker logs partner-integration | grep 'EvaluatePartnerRulesV1 published'
-docker logs partner-rules | grep 'EvaluatePartnerRulesV1 received'
-docker logs partner-rules | grep 'PartnerRulesEvaluatedV1 published'
-docker logs work-orchestration | grep 'PartnerRulesEvaluatedV1 received'
-docker logs work-orchestration | grep 'WorkCreatedV1 published'
-docker logs provider-matching | grep 'Matching processed'
-```
-
-Probar compensacion de la SAGA:
-
-```bash
-FAIL_REF="saga-fail-$(date +%s)"
-curl -X POST http://localhost:8005/api/v1/partner-requests \
-  -H "Content-Type: application/json" \
-  -d "{\"partner_id\":\"partner-demo\",\"payload\":{\"reference\":\"${FAIL_REF}\",\"municipality\":\"Bogota\",\"country_code\":\"CO\",\"service_type\":\"HOME_REPAIR\"}}"
-
-sleep 12
-curl "http://localhost:8005/api/v1/partner-requests/${FAIL_REF}"
-docker logs provider-matching | grep 'MatchingFailedV1 published'
-docker logs work-orchestration | grep 'WorkCancelledV1 published'
-```
+Los flujos paso a paso con `curl` están en [`docs/bff-flujos.md`](docs/bff-flujos.md).
 
 Apagar (conserva volúmenes):
 
@@ -233,164 +76,98 @@ Apagar (conserva volúmenes):
 docker compose down
 ```
 
-## GCP — Entrega 5
+## BFF — punto de entrada del sistema
 
-| Campo | Valor |
-|---|---|
-| Project ID | `alpine-land-507822-t7` |
-| Cluster | `hda-poc` (`us-central1-a`) |
-| IMAGE_TAG | `e5-202609192043` |
-| BFF public URL | `http://136.64.180.29` |
-| Swagger | `http://136.64.180.29/docs` |
-| Artifact Registry | `us-central1-docker.pkg.dev/alpine-land-507822-t7/hda-poc` |
+**El BFF es la única API pública que debe utilizarse para interactuar con la POC.**
 
-**BFF = única API pública** (`Service type: LoadBalancer`).
+Los microservicios internos no se exponen para uso de cliente: en local quedan detrás de Compose y en GCP van como `ClusterIP`.
 
-Microservicios internos (`ClusterIP`):
+| Ambiente | Base URL | Swagger |
+|---|---|---|
+| Local | `http://localhost:8005` | `http://localhost:8005/docs` |
+| GCP | `http://136.64.180.29` | `http://136.64.180.29/docs` |
 
-- `partner-integration`
-- `partner-rules`
-- `work-orchestration` (+ Saga Log SQLite en `/data`, Cloud SQL Auth Proxy sidecar)
-- `provider-matching`
-- `pulsar`
+Endpoints principales del BFF:
 
-### Saga implementada (coreografiada)
+| Método | Ruta | Para qué |
+|---|---|---|
+| `GET` | `/health` | Health del BFF |
+| `GET` | `/api/v1/health` | Health agregado (BFF + upstreams) |
+| `POST` | `/api/v1/partner-requests` | Arranca el flujo (HTTP 202) |
+| `GET` | `/api/v1/partner-requests/{external_reference}` | Estado consolidado de la SAGA |
+| `GET` | `/api/v1/partner-requests?limit=20` | Listado reciente |
+| `GET` | `/api/v1/works/{work_id}` | Consulta de un Work |
 
-```
-BFF → Partner Integration → EvaluatePartnerRulesV1 → Partner Rules
-  → PartnerRulesEvaluatedV1 → Work Orchestration → WorkCreatedV1
-  → Provider Matching → MatchingCompletedV1 | MatchingFailedV1
-```
+Contrato y payloads: [`docs/bff-api.md`](docs/bff-api.md).  
+Demostración de flujos: [`docs/bff-flujos.md`](docs/bff-flujos.md).
 
-- Éxito: `COMPLETED` (pasos `PARTNER_RULES_EVALUATED`, `WORK_CREATED`, `MATCHING_COMPLETED`)
-- Fallo matching (`fail` en `external_reference`): compensación → Work `CANCELLED` → `COMPENSATED`
-- Rechazo reglas (`service_type=PLUMBING`): `REJECTED`, sin Work ni matching
+## Postman
 
-### Postman
+Los archivos están en el repo:
 
-Importar en Postman:
+- Collection: [`postman/HDA-Entrega5-GCP.postman_collection.json`](postman/HDA-Entrega5-GCP.postman_collection.json)
+- Environment: [`postman/HDA-Entrega5-GCP.postman_environment.json`](postman/HDA-Entrega5-GCP.postman_environment.json)
 
-1. Collection: `postman/HDA-Entrega5-GCP.postman_collection.json`
-2. Environment: `postman/HDA-Entrega5-GCP.postman_environment.json` (`HDA Entrega5 GCP`)
+Cómo usarlos:
 
-Variable `bff_url` = `http://136.64.180.29`.
+1. En Postman: **Import** → seleccionar la collection y el environment.
+2. Activar el environment `HDA Entrega5 GCP`.
+3. Revisar la variable `bff_url` (hoy apunta a `http://136.64.180.29`; en local se puede cambiar a `http://localhost:8005`).
+4. Correr las carpetas en orden: Health → Saga exitosa → Compensación → Reglas rechazadas → Consultas.
 
-Carpetas:
+Toda la collection habla únicamente con el BFF (`{{bff_url}}`). No hay requests directos a Partner Integration, Partner Rules, Work Orchestration ni Provider Matching.
 
-1. Health
-2. Saga exitosa (`HOME_REPAIR`)
-3. Saga con compensación (`fail` en reference)
-4. Reglas rechazadas (`PLUMBING`)
-5. Operaciones de consulta
+## Despliegue
 
-Ejecutar con Newman:
+Proyecto GCP: `alpine-land-507822-t7`  
+Cluster: `hda-poc` (`us-central1-a`)  
+Artifact Registry: `us-central1-docker.pkg.dev/alpine-land-507822-t7/hda-poc`
+
+Autenticación y proyecto:
 
 ```bash
 cd entrega-5
-newman run postman/HDA-Entrega5-GCP.postman_collection.json \
-  -e postman/HDA-Entrega5-GCP.postman_environment.json \
-  --delay-request 5000
-```
-
-### Cómo probar en GCP
-
-```bash
-BFF=http://136.64.180.29
-
-# Health
-curl -sS "$BFF/api/v1/health"
-
-# Saga exitosa
-curl -sS -X POST "$BFF/api/v1/partner-requests" -H "Content-Type: application/json" \
-  -d '{"partner_id":"partner-demo","payload":{"reference":"gcp-saga-success-demo","municipality":"Bogota","country_code":"CO","service_type":"HOME_REPAIR"}}'
-curl -sS "$BFF/api/v1/partner-requests/gcp-saga-success-demo"
-
-# Saga compensada
-curl -sS -X POST "$BFF/api/v1/partner-requests" -H "Content-Type: application/json" \
-  -d '{"partner_id":"partner-demo","payload":{"reference":"gcp-saga-compensation-fail-demo","municipality":"Bogota","country_code":"CO","service_type":"HOME_REPAIR"}}'
-curl -sS "$BFF/api/v1/partner-requests/gcp-saga-compensation-fail-demo"
-
-# Rechazo de reglas
-curl -sS -X POST "$BFF/api/v1/partner-requests" -H "Content-Type: application/json" \
-  -d '{"partner_id":"partner-demo","payload":{"reference":"gcp-saga-rejected-demo","municipality":"Bogota","country_code":"CO","service_type":"PLUMBING"}}'
-curl -sS "$BFF/api/v1/partner-requests/gcp-saga-rejected-demo"
-```
-
-## Despliegue en GCP (Entrega 4 / base)
-
-Proyecto: `alpine-land-507822-t7`.
-
-**Estado base E4: PASS** — E2E en GKE (`ext-gcp-1789426682`): PI → PR → WO → PM
-(`EvaluatePartnerRulesV1` → `PartnerRulesEvaluatedV1` → `WorkCreatedV1` → Matching).
-
-### Desplegar (si aún no está en el cluster)
-
-```bash
-cd entrega-4
 gcloud auth login
 gcloud auth application-default login
 gcloud config set project alpine-land-507822-t7
 export PROJECT_ID=alpine-land-507822-t7
 export IMAGE_TAG=$(git rev-parse --short HEAD)-$(date +%Y%m%d%H%M)
-
-make build
-make deploy
 ```
 
-### Prueba E2E en GCP (replicar)
-
-Con el cluster ya desplegado, validar el flujo asíncrono completo:
+Credenciales del cluster:
 
 ```bash
-cd entrega-4
 gcloud container clusters get-credentials hda-poc \
   --zone us-central1-a \
   --project alpine-land-507822-t7
-
-# Opción recomendada (script automatizado):
-make verify
-# equivale a: bash scripts/verify-gcp.sh
 ```
 
-Qué hace `make verify` / `scripts/verify-gcp.sh`:
-
-1. Obtiene la External IP del LoadBalancer del `bff` (única puerta pública).
-2. `GET /api/v1/health` → estado consolidado del BFF y los 4 microservicios.
-3. `POST /api/v1/partner-requests` con un `reference` único (`ext-gcp-<timestamp>`).
-4. `GET /api/v1/partner-requests/<ref>` → verifica que el BFF reporte `COMPLETED`.
-5. Espera el flujo async y comprueba en logs:
-
-| Paso | Servicio | Log esperado |
-|---|---|---|
-| 1 | Partner Integration | `EvaluatePartnerRulesV1 published: <REF>` |
-| 2 | Partner Rules | `EvaluatePartnerRulesV1 received: <REF>` |
-| 3 | Partner Rules | `PartnerRulesEvaluatedV1 published: <REF>` |
-| 4 | Work Orchestration | `PartnerRulesEvaluatedV1 received: <REF>` |
-| 5 | Work Orchestration | `Work persisted` + `WorkCreatedV1 published` |
-| 6 | Provider Matching | `WorkCreatedV1 received` + `Matching processed` |
-
-### Prueba E2E manual (sin script)
+Build, deploy y verificación (targets del `Makefile`):
 
 ```bash
-# External IP del BFF
-EXTERNAL_IP=$(kubectl -n hda get svc bff \
-  -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-
-curl -fsS "http://${EXTERNAL_IP}/api/v1/health"
-
-REF="ext-gcp-$(date +%s)"
-curl -fsS -X POST "http://${EXTERNAL_IP}/api/v1/partner-requests" \
-  -H "Content-Type: application/json" \
-  -d "{\"partner_id\":\"partner-demo\",\"payload\":{\"reference\":\"${REF}\",\"municipality\":\"Bogota\",\"country_code\":\"CO\",\"service_type\":\"HOME_REPAIR\"}}"
-
-# Esperar ~12s y revisar el estado consolidado + los logs del flujo
-sleep 12
-curl -fsS "http://${EXTERNAL_IP}/api/v1/partner-requests/${REF}"
-
-kubectl -n hda logs deploy/partner-integration --tail=80 | grep "EvaluatePartnerRulesV1 published"
-kubectl -n hda logs deploy/partner-rules --tail=80 | grep -E "EvaluatePartnerRulesV1 received|PartnerRulesEvaluatedV1 published"
-kubectl -n hda logs deploy/work-orchestration -c work-orchestration --tail=80 | grep -E "PartnerRulesEvaluatedV1 received|Work persisted|WorkCreatedV1 published"
-kubectl -n hda logs deploy/provider-matching --tail=80 | grep -E "WorkCreatedV1 received|Matching processed"
+make build    # scripts/build-and-push.sh
+make deploy   # scripts/deploy-gcp.sh
+make verify   # scripts/verify-gcp.sh
 ```
 
-Evidencia de la corrida del equipo: referencia `ext-gcp-1789426682`, HTTP `202 accepted`, flujo PI → PR → WO → PM completo en logs.
+`make verify` toma la External IP del LoadBalancer del BFF, hace health, crea un partner request y espera a que el BFF reporte `COMPLETED`.
+
+Estado actual desplegado (referencia):
+
+| Campo | Valor |
+|---|---|
+| IMAGE_TAG | `e5-202609192043` |
+| BFF público | `http://136.64.180.29` |
+| Swagger | `http://136.64.180.29/docs` |
+
+## Documentación
+
+| Documento | Para qué sirve |
+|---|---|
+| [`docs/architecture.md`](docs/architecture.md) | Arquitectura de la POC |
+| [`docs/bff-api.md`](docs/bff-api.md) | Contrato del BFF |
+| [`docs/bff-flujos.md`](docs/bff-flujos.md) | Flujos de demostración paso a paso |
+| [`docs/resultados-cualitativos.md`](docs/resultados-cualitativos.md) | Interpretación de los experimentos de calidad |
+| [`experiments/modifiability/results/`](experiments/modifiability/results/) | Evidencia de modificabilidad |
+| [`experiments/scalability/results/`](experiments/scalability/results/) | Evidencia de escalabilidad |
+| [`experiments/deployability/results/`](experiments/deployability/results/) | Evidencia de desplegabilidad |
